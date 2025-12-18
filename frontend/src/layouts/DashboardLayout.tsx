@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Outlet, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, School, Users, CreditCard, FileText, Menu, X, ChevronRight, LayoutDashboard, BookOpen } from 'lucide-react';
+import { LogOut, School, Users, CreditCard, FileText, Menu, X, ChevronRight, LayoutDashboard, BookOpen, MessageSquare, Bell } from 'lucide-react';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -40,6 +40,8 @@ export default function DashboardLayout() {
                                 <NavItem icon={<BookOpen />} label="Classes" to="/dashboard/classes" />
                                 <NavItem icon={<CreditCard />} label="Finance" to="/dashboard/finance" />
                                 <NavItem icon={<FileText />} label="Reports" to="/dashboard/reports" />
+                                <NavItem icon={<Bell />} label="Notifications" to="/dashboard/notifications" />
+                                <NavItem icon={<MessageSquare />} label="Support" to="/dashboard/tickets" />
                             </>
                         )}
                         {role === 'STUDENT' && (
@@ -50,7 +52,10 @@ export default function DashboardLayout() {
                             </>
                         )}
                         {role === 'SUPERADMIN' && (
-                            <NavItem icon={<School />} label="All Schools" to="/superadmin" />
+                            <>
+                                <NavItem icon={<School />} label="All Schools" to="/superadmin" />
+                                <NavItem icon={<MessageSquare />} label="Tickets" to="/superadmin/tickets" />
+                            </>
                         )}
                     </nav>
                 </div>
@@ -118,6 +123,8 @@ export default function DashboardLayout() {
                                         <NavItem icon={<BookOpen />} label="Classes" to="/dashboard/classes" onClick={() => setIsSidebarOpen(false)} />
                                         <NavItem icon={<CreditCard />} label="Finance" to="/dashboard/finance" onClick={() => setIsSidebarOpen(false)} />
                                         <NavItem icon={<FileText />} label="Reports" to="/dashboard/reports" onClick={() => setIsSidebarOpen(false)} />
+                                        <NavItem icon={<Bell />} label="Notifications" to="/dashboard/notifications" onClick={() => setIsSidebarOpen(false)} />
+                                        <NavItem icon={<MessageSquare />} label="Support" to="/dashboard/tickets" onClick={() => setIsSidebarOpen(false)} />
                                     </>
                                 )}
                                 {role === 'STUDENT' && (
@@ -126,7 +133,10 @@ export default function DashboardLayout() {
                                     </>
                                 )}
                                 {role === 'SUPERADMIN' && (
-                                    <NavItem icon={<School />} label="All Schools" to="/superadmin" onClick={() => setIsSidebarOpen(false)} />
+                                    <>
+                                        <NavItem icon={<School />} label="All Schools" to="/superadmin" onClick={() => setIsSidebarOpen(false)} />
+                                        <NavItem icon={<MessageSquare />} label="Tickets" to="/superadmin/tickets" onClick={() => setIsSidebarOpen(false)} />
+                                    </>
                                 )}
                             </nav>
                             <div className="mt-auto p-6 border-t border-slate-100">

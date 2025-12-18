@@ -35,6 +35,7 @@ func RegisterStudentRoutes(router *gin.RouterGroup) {
 	students.Use(middleware.AuthMiddleware(), middleware.RoleGuard("SCHOOLADMIN", "TEACHER"))
 	{
 		students.GET("", listStudents)
+		students.GET("/analytics", getStudentAnalytics)
 		students.PUT("/:id", updateStudent)
 	}
 }
@@ -52,6 +53,47 @@ func listStudents(c *gin.Context) {
 	models.DB.Where("school_id = ?", schoolID).Preload("User").Preload("Class").Find(&students)
 
 	c.JSON(http.StatusOK, students)
+}
+
+// getStudentAnalytics returns student counts and stats for dashboard
+func getStudentAnalytics(c *gin.Context) {
+	schoolID := c.MustGet("schoolID").(uint)
+
+	// Total students
+	var totalStudents int64
+	models.DB.Model(&models.Student{}).Where("school_id = ?", schoolID).Count(&totalStudents)
+
+	// Students per class
+	type ClassCount struct {
+		ClassName string `json:"class_name"`
+		ClassID   uint   `json:"class_id"`
+		Count     int64  `json:"count"`
+	}
+
+	var classCounts []ClassCount
+	models.DB.Raw(`
+		SELECT c.name as class_name, c.id as class_id, COUNT(s.id) as count
+		FROM classes c
+		LEFT JOIN students s ON s.class_id = c.id
+		WHERE c.school_id = ?
+		GROUP BY c.id, c.name
+		ORDER BY c.name
+	`, schoolID).Scan(&classCounts)
+
+	// Unassigned students (no class)
+	var unassignedCount int64
+	models.DB.Model(&models.Student{}).Where("school_id = ? AND class_id IS NULL", schoolID).Count(&unassignedCount)
+
+	// Total classes
+	var totalClasses int64
+	models.DB.Model(&models.Class{}).Where("school_id = ?", schoolID).Count(&totalClasses)
+
+	c.JSON(http.StatusOK, gin.H{
+		"total_students":      totalStudents,
+		"total_classes":       totalClasses,
+		"unassigned_students": unassignedCount,
+		"students_by_class":   classCounts,
+	})
 }
 
 func updateStudent(c *gin.Context) {

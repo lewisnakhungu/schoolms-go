@@ -39,6 +39,8 @@ func main() {
 	routes.RegisterStudentRoutes(api)
 	routes.RegisterFinanceRoutes(api)
 	routes.RegisterReportRoutes(api)
+	routes.RegisterTicketRoutes(api)
+	routes.RegisterNotificationRoutes(api)
 
 	// Seed Superadmin
 	utils.SeedSuperAdmin()

@@ -11,6 +11,8 @@ import ClassesPage from './pages/ClassesPage';
 import FinancePage from './pages/FinancePage';
 import ReportsPage from './pages/ReportsPage';
 import DashboardHome from './pages/DashboardHome';
+import TicketsPage from './pages/TicketsPage';
+import NotificationsPage from './pages/NotificationsPage';
 import './index.css';
 
 const App = () => {
@@ -27,10 +29,13 @@ const App = () => {
                         <Route path="classes" element={<ClassesPage />} />
                         <Route path="finance" element={<FinancePage />} />
                         <Route path="reports" element={<ReportsPage />} />
+                        <Route path="tickets" element={<TicketsPage />} />
+                        <Route path="notifications" element={<NotificationsPage />} />
                     </Route>
 
                     <Route path="/superadmin" element={<DashboardLayout />}>
                         <Route index element={<SuperAdminDashboard />} />
+                        <Route path="tickets" element={<TicketsPage />} />
                     </Route>
 
                     <Route path="/" element={<Navigate to="/login" replace />} />
@@ -45,3 +50,4 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <App />
     </React.StrictMode>,
 );
+
