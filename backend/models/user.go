@@ -10,13 +10,15 @@ import (
 
 // User model
 type User struct {
-	ID           uint      `gorm:"primaryKey"`
-	Email        string    `gorm:"uniqueIndex;not null" json:"email"`
-	PasswordHash string    `gorm:"not null" json:"-"`
-	Role         string    `gorm:"not null" json:"role"` // SUPERADMIN, SCHOOLADMIN, TEACHER, STUDENT
-	SchoolID     *uint     `gorm:"index" json:"school_id,omitempty"` // Nullable for Superadmin
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	ID           uint       `gorm:"primaryKey"`
+	Email        string     `gorm:"uniqueIndex;not null" json:"email"`
+	FullName     string     `json:"full_name"`
+	PasswordHash string     `gorm:"not null" json:"-"`
+	Role         string     `gorm:"not null" json:"role"`             // SUPERADMIN, SCHOOLADMIN, TEACHER, STUDENT
+	SchoolID     *uint      `gorm:"index" json:"school_id,omitempty"` // Nullable for Superadmin
+	LastLoginAt  *time.Time `json:"last_login_at,omitempty"`
+	CreatedAt    time.Time  `json:"created_at"`
+	UpdatedAt    time.Time  `json:"updated_at"`
 }
 
 // Force table name and DISABLE soft deletes completely

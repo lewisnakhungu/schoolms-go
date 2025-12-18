@@ -18,6 +18,13 @@ type CreateSchoolInput struct {
 	AdminName   string `json:"admin_name"` // Optional, but good for UX
 }
 
+type UpdateSchoolInput struct {
+	Name               string `json:"name"`
+	Address            string `json:"address"`
+	ContactInfo        string `json:"contact_info"`
+	SubscriptionStatus string `json:"subscription_status"` // ACTIVE, INACTIVE, TRIAL
+}
+
 func RegisterSuperAdminRoutes(router *gin.RouterGroup) {
 	// Protected group for Superadmin only
 	super := router.Group("/superadmin")
@@ -25,6 +32,9 @@ func RegisterSuperAdminRoutes(router *gin.RouterGroup) {
 	{
 		super.POST("/schools", createSchoolAndAdmin)
 		super.GET("/schools", listSchools)
+		super.PUT("/schools/:id", updateSchool)
+		super.DELETE("/schools/:id", deleteSchool)
+		super.POST("/schools/:id/reset-password", resetSchoolAdminPassword)
 	}
 }
 
@@ -125,5 +135,125 @@ func createSchoolAndAdmin(c *gin.Context) {
 		"credentials": gin.H{
 			"password": rawPassword,
 		},
+	})
+}
+
+// updateSchool updates school details
+func updateSchool(c *gin.Context) {
+	schoolID := c.Param("id")
+
+	var school models.School
+	if err := models.DB.First(&school, schoolID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "School not found"})
+		return
+	}
+
+	var input UpdateSchoolInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Update fields if provided
+	if input.Name != "" {
+		school.Name = input.Name
+	}
+	if input.Address != "" {
+		school.Address = input.Address
+	}
+	if input.ContactInfo != "" {
+		school.ContactInfo = input.ContactInfo
+	}
+	if input.SubscriptionStatus != "" {
+		school.SubscriptionStatus = input.SubscriptionStatus
+	}
+
+	if err := models.DB.Save(&school).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update school"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "School updated successfully",
+		"school":  school,
+	})
+}
+
+// deleteSchool removes a school and all related data
+func deleteSchool(c *gin.Context) {
+	schoolID := c.Param("id")
+
+	var school models.School
+	if err := models.DB.First(&school, schoolID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "School not found"})
+		return
+	}
+
+	// Delete in transaction to handle related records
+	err := models.DB.Transaction(func(tx *gorm.DB) error {
+		// Delete payments for students of this school
+		tx.Where("school_id = ?", schoolID).Delete(&models.Payment{})
+
+		// Delete fee structures
+		tx.Where("school_id = ?", schoolID).Delete(&models.FeeStructure{})
+
+		// Delete students
+		tx.Where("school_id = ?", schoolID).Delete(&models.Student{})
+
+		// Delete classes
+		tx.Where("school_id = ?", schoolID).Delete(&models.Class{})
+
+		// Delete invites
+		tx.Where("school_id = ?", schoolID).Delete(&models.Invite{})
+
+		// Delete users (school admins, teachers)
+		tx.Where("school_id = ?", schoolID).Delete(&models.User{})
+
+		// Finally delete the school
+		if err := tx.Delete(&school).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete school: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "School deleted successfully"})
+}
+
+// resetSchoolAdminPassword generates a new password for the school admin
+func resetSchoolAdminPassword(c *gin.Context) {
+	schoolID := c.Param("id")
+
+	// Find school admin user
+	var admin models.User
+	if err := models.DB.Where("school_id = ? AND role = ?", schoolID, "SCHOOLADMIN").First(&admin).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "School admin not found"})
+		return
+	}
+
+	// Generate new password
+	newPassword := "Reset123!" // In production, generate random string
+
+	hashedPassword, err := models.HashPassword(newPassword)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		return
+	}
+
+	admin.PasswordHash = hashedPassword
+	if err := models.DB.Save(&admin).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update password"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":      "Password reset successfully",
+		"admin_email":  admin.Email,
+		"new_password": newPassword,
 	})
 }

@@ -131,6 +131,11 @@ func login(c *gin.Context) {
 		return
 	}
 
+	// Update last login time
+	now := time.Now()
+	user.LastLoginAt = &now
+	models.DB.Save(&user)
+
 	token, err := utils.GenerateToken(user.ID, user.Role, user.SchoolID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not generate token"})
@@ -143,6 +148,7 @@ func login(c *gin.Context) {
 		"user": gin.H{
 			"id":        user.ID,
 			"email":     user.Email,
+			"full_name": user.FullName,
 			"role":      user.Role,
 			"school_id": user.SchoolID,
 		},
