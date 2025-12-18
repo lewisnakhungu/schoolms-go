@@ -1,30 +1,55 @@
-package main // Every Go file starts with "package"
+package main
 
 import (
-	"schoolms-go/models" // Our database models
-	"schoolms-go/routes" // Our API routes
+	"log"
+	"os"
+	"schoolms-go/models"
+	"schoolms-go/routes"
+	"schoolms-go/utils"
 
-	"github.com/gofiber/fiber/v2"           // Web server (like FastAPI)
-	"github.com/gofiber/fiber/v2/middleware/cors"  // Allow frontend to connect
-	"github.com/gofiber/fiber/v2/middleware/logger" // Print requests in terminal
+	"time"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	// Connect to database (SQLite file will be created automatically)
+	// Connect to database
 	models.ConnectDB()
 
-	// Create the Fiber app (like FastAPI())
-	app := fiber.New()
+	// Initialize Gin
+	r := gin.Default()
 
-	// Allow frontend (React, etc.) to talk to backend
-	app.Use(cors.New())
-	// Show nice logs when someone hits your API
-	app.Use(logger.New())
+	// CORS Configuration
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:5173"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
-	// Setup all API routes (signup, login, etc.)
-	routes.SetupRoutes(app)
+	// Setup Routes
+	api := r.Group("/api/v1")
+	routes.RegisterAuthRoutes(api)
+	routes.RegisterSuperAdminRoutes(api)
+	routes.RegisterInviteRoutes(api)
+	routes.RegisterClassRoutes(api)
+	routes.RegisterStudentRoutes(api)
+	routes.RegisterFinanceRoutes(api)
+	routes.RegisterReportRoutes(api)
 
-	// Start server on port 8001 (8000 is used by Python)
-	// You’ll see: Listening on :8001
-	app.Listen(":8001")
+	// Seed Superadmin
+	utils.SeedSuperAdmin()
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	log.Printf("Server starting on port %s", port)
+	if err := r.Run(":" + port); err != nil {
+		log.Fatal("Failed to start server: ", err)
+	}
 }

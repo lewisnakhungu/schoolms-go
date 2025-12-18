@@ -8,16 +8,15 @@ import (
 	"gorm.io/gorm"
 )
 
-// THIS IS THE ONLY CORRECT VERSION — NO gorm.Model, NO DeletedAt
+// User model
 type User struct {
-	ID        uint      `gorm:"primaryKey"`
-	Email     string    `gorm:"uniqueIndex;not null"`
-	FullName  string    `json:"full_name"`
-	Password  string    `gorm:"not null" json:"-"`
-	Role      string    `gorm:"not null"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	// NO DeletedAt FIELD AT ALL
+	ID           uint      `gorm:"primaryKey"`
+	Email        string    `gorm:"uniqueIndex;not null" json:"email"`
+	PasswordHash string    `gorm:"not null" json:"-"`
+	Role         string    `gorm:"not null" json:"role"` // SUPERADMIN, SCHOOLADMIN, TEACHER, STUDENT
+	SchoolID     *uint     `gorm:"index" json:"school_id,omitempty"` // Nullable for Superadmin
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
 
 // Force table name and DISABLE soft deletes completely

@@ -1,125 +1,150 @@
-// routes/auth.go
-package routes // ← MUST be "routes", not "main"
+package routes
 
 import (
+	"fmt"
+	"net/http"
 	"schoolms-go/models"
+	"schoolms-go/utils"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
-
-// NEVER leave this empty in real life — use a strong 32+ char secret
-var jwtSecret = []byte("1c9f8a7b3e5d2f4a6b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c")
 
 // Login request body
 type LoginInput struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
 }
 
 // Signup request body
 type SignupInput struct {
-	Email    string `json:"email"`
-	FullName string `json:"full_name"`
-	Password string `json:"password"`
-	Role     string `json:"role"`
+	Email      string `json:"email" binding:"required,email"`
+	Password   string `json:"password" binding:"required,min=6"`
+	InviteCode string `json:"invite_code" binding:"required"`
+	// Role and SchoolID are determined by the invite
 }
 
-// Register the two routes
-func SetupRoutes(app *fiber.App) {
-	api := app.Group("/api/v1/auth")
-
-	api.Post("/signup", signup)
-	api.Post("/login", login)
+func RegisterAuthRoutes(router *gin.RouterGroup) {
+	auth := router.Group("/auth")
+	{
+		auth.POST("/signup", signup)
+		auth.POST("/login", login)
+	}
 }
 
-// ========================
-// SIGNUP ENDPOINT
-// ========================
-func signup(c *fiber.Ctx) error {
-	input := new(SignupInput)
-	if err := c.BodyParser(input); err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "Cannot parse JSON"})
+func signup(c *gin.Context) {
+	var input SignupInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
-	// Validate role
-	validRoles := map[string]bool{
-		"superadmin":  true,
-		"schooladmin": true,
-		"teacher":     true,
-		"student":     true,
-	}
-	if !validRoles[input.Role] {
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid role"})
+	// 1. Validate Invite Code
+	var invite models.Invite
+	if err := models.DB.Where("code = ? AND is_used = ?", input.InviteCode, false).First(&invite).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid or used invite code"})
+		return
 	}
 
-	// Check if email already exists
+	if invite.ExpiresAt.Before(time.Now()) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invite code expired"})
+		return
+	}
+
+	// 2. Check if email exists
 	var existing models.User
-	if models.DB.Where("email = ?", input.Email).First(&existing).RowsAffected > 0 {
-		return c.Status(400).JSON(fiber.Map{"error": "Email already registered"})
+	if result := models.DB.Where("email = ?", input.Email).First(&existing); result.RowsAffected > 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email already registered"})
+		return
 	}
 
-	// Hash password properly (don't ignore error)
+	// 3. Hash Password
 	hashedPassword, err := models.HashPassword(input.Password)
 	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "Failed to hash password"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		return
 	}
 
-	// Create user
-	user := models.User{
-		Email:    input.Email,
-		FullName: input.FullName,
-		Password: hashedPassword,
-		Role:     input.Role,
+	// 4. Create User (Atomic transaction with invite update)
+	err = models.DB.Transaction(func(tx *gorm.DB) error {
+		user := models.User{
+			Email:        input.Email,
+			PasswordHash: hashedPassword,
+			Role:         invite.Role,
+			SchoolID:     &invite.SchoolID,
+			// FullName logic if needed
+		}
+
+		if err := tx.Create(&user).Error; err != nil {
+			return err
+		}
+
+		// Mark invite as used
+		invite.IsUsed = true
+		if err := tx.Save(&invite).Error; err != nil {
+			return err
+		}
+
+		// If Role is STUDENT, create Student record automatically
+		if user.Role == "STUDENT" {
+			student := models.Student{
+				UserID:           user.ID,
+				SchoolID:         *user.SchoolID,
+				EnrollmentNumber: "PENDING", // Update later
+			}
+			if err := tx.Create(&student).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Signup failed: " + err.Error()})
+		return
 	}
 
-	// Save to DB
-	models.DB.Create(&user)
-
-	// Success
-	return c.JSON(fiber.Map{
-		"message": input.Role + " created successfully!",
-		"email":   user.Email,
+	c.JSON(http.StatusCreated, gin.H{
+		"message": fmt.Sprintf("%s created successfully!", invite.Role),
+		"email":   input.Email,
+		"role":    invite.Role,
 	})
 }
 
-// ========================
-// LOGIN ENDPOINT
-// ========================
-func login(c *fiber.Ctx) error {
-	input := new(LoginInput)
-	if err := c.BodyParser(input); err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "Cannot parse JSON"})
+func login(c *gin.Context) {
+	var input LoginInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	var user models.User
-	result := models.DB.Where("email = ?", input.Email).First(&user)
-
-	if result.RowsAffected == 0 {
-		return c.Status(401).JSON(fiber.Map{"error": "Invalid email or password"})
+	if result := models.DB.Where("email = ?", input.Email).First(&user); result.RowsAffected == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+		return
 	}
 
-	if !models.CheckPasswordHash(input.Password, user.Password) {
-		return c.Status(401).JSON(fiber.Map{"error": "Invalid email or password"})
+	if !models.CheckPasswordHash(input.Password, user.PasswordHash) {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+		return
 	}
 
-	// Generate JWT
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"email": user.Email,
-		"role":  user.Role,
-		"exp":   time.Now().Add(time.Hour * 24).Unix(),
-	})
-
-	tokenString, err := token.SignedString(jwtSecret)
+	token, err := utils.GenerateToken(user.ID, user.Role, user.SchoolID)
 	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "Could not generate token"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not generate token"})
+		return
 	}
 
-	return c.JSON(fiber.Map{
-		"access_token": tokenString,
-		"token_type":   "bearer",
-		"role":         user.Role,
-		"full_name":    user.FullName,
+	c.JSON(http.StatusOK, gin.H{
+		"access_token": token,
+		"token_type":   "Bearer",
+		"user": gin.H{
+			"id":        user.ID,
+			"email":     user.Email,
+			"role":      user.Role,
+			"school_id": user.SchoolID,
+		},
 	})
 }

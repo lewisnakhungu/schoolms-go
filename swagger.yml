@@ -1,0 +1,76 @@
+openapi: 3.0.0
+info:
+  title: SchoolMS MVP API
+  description: Multi-tenant School Management System API
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api/v1
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - BearerAuth: []
+paths:
+  /auth/login:
+    post:
+      summary: Login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string }
+                password: { type: string }
+      responses:
+        200:
+          description: OK
+  /auth/signup:
+    post:
+      summary: Signup with Invite Code
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string }
+                password: { type: string }
+                invite_code: { type: string }
+      responses:
+        201:
+          description: Created
+  /superadmin/schools:
+    post:
+      summary: Create School and Admin (Superadmin Only)
+      responses:
+        201:
+          description: Created
+  /invites:
+    post:
+      summary: Create Invite (SchoolAdmin Only)
+      responses:
+        201:
+          description: Created
+  /classes:
+    get:
+      summary: List Classes (SchoolAdmin Only)
+    post:
+      summary: Create Class (SchoolAdmin Only)
+  /students:
+    get:
+      summary: List Students
+    put:
+      summary: Update Student (Assign Class)
+  /finance/fees:
+    post:
+      summary: Create Fee Structure
+  /finance/payments:
+    post:
+      summary: Record Payment
+  /reports/defaulters:
+    get:
+      summary: Get JSON Report of Defaulters

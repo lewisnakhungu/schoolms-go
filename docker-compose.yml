@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: schoolms_db
+    environment:
+      POSTGRES_USER: schoolms_user
+      POSTGRES_PASSWORD: schoolms_password
+      POSTGRES_DB: schoolms_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U schoolms_user -d schoolms_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    container_name: schoolms_api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_USER: schoolms_user
+      DB_PASSWORD: schoolms_password
+      DB_NAME: schoolms_db
+      DB_PORT: 5432
+      PORT: 8080
+      JWT_SECRET: supersecretkeychangeinproduction
+      SUPERADMIN_EMAIL: super@school.com
+      SUPERADMIN_PASSWORD: SuperPassword123!
+    ports:
+      - "8080:8080"
+    restart: on-failure
+
+volumes:
+  postgres_data:
