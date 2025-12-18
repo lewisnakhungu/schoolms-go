@@ -10,12 +10,12 @@ interface User {
 }
 
 interface School {
-    ID: number;
+    id: number;
     name: string;
     address: string;
     contact_info: string;
     subscription_status: string;
-    CreatedAt: string;
+    created_at: string;
     Users?: User[];
 }
 
@@ -98,7 +98,7 @@ export default function SuperAdminDashboard() {
         setError('');
 
         try {
-            await api.put(`/superadmin/schools/${selectedSchool.ID}`, editFormData);
+            await api.put(`/superadmin/schools/${selectedSchool.id}`, editFormData);
             setShowEditModal(false);
             setSuccess('School updated successfully!');
             fetchSchools();
@@ -121,7 +121,7 @@ export default function SuperAdminDashboard() {
         setError('');
 
         try {
-            await api.delete(`/superadmin/schools/${selectedSchool.ID}`);
+            await api.delete(`/superadmin/schools/${selectedSchool.id}`);
             setShowDeleteModal(false);
             setSuccess('School deleted successfully!');
             fetchSchools();
@@ -137,7 +137,7 @@ export default function SuperAdminDashboard() {
         if (!confirm(`Reset password for ${school.name}'s admin?`)) return;
 
         try {
-            const resp = await api.post(`/superadmin/schools/${school.ID}/reset-password`);
+            const resp = await api.post(`/superadmin/schools/${school.id}/reset-password`);
             alert(`New password for ${resp.data.admin_email}: ${resp.data.new_password}`);
             fetchSchools();
         } catch (err: any) {
@@ -264,7 +264,7 @@ export default function SuperAdminDashboard() {
                                     const admin = school.Users?.find(u => u.role === 'SCHOOLADMIN');
                                     const loginStatus = getLastLoginStatus(admin);
                                     return (
-                                        <tr key={school.ID} className="hover:bg-slate-50/50">
+                                        <tr key={school.id} className="hover:bg-slate-50/50">
                                             <td className="px-6 py-4 font-medium text-slate-900">{school.name}</td>
                                             <td className="px-6 py-4 text-slate-600">
                                                 {admin?.email || '-'}
@@ -286,7 +286,7 @@ export default function SuperAdminDashboard() {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-slate-500">
-                                                {new Date(school.CreatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                {new Date(school.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex justify-end gap-1">
