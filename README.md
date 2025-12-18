@@ -70,6 +70,32 @@
 
 ```
 schoolms-go/
+├── 📂 backend/                  # Go Backend API
+│   ├── 📂 middleware/           # HTTP Middleware
+│   │   └── auth.go              # JWT Auth & Role Guards
+│   ├── 📂 models/               # Database Models (GORM)
+│   │   ├── db.go                # Database Connection
+│   │   ├── user.go              # User Model
+│   │   ├── school.go            # School Model
+│   │   ├── class_student.go     # Class & Student Models
+│   │   ├── finance.go           # Fee & Payment Models
+│   │   └── invite.go            # Invite Code Model
+│   ├── 📂 routes/               # API Route Handlers
+│   │   ├── auth.go              # /auth/* endpoints
+│   │   ├── superadmin.go        # /superadmin/* endpoints
+│   │   ├── invite.go            # /invites/* endpoints
+│   │   ├── class.go             # /classes/* endpoints
+│   │   ├── student.go           # /students/* endpoints
+│   │   ├── finance.go           # /finance/* endpoints
+│   │   └── reports.go           # /reports/* endpoints
+│   ├── 📂 utils/                # Utility Functions
+│   │   ├── jwt.go               # JWT Token Generation
+│   │   ├── seeder.go            # Database Seeder
+│   │   └── errors.go            # Custom Error Types
+│   ├── main.go                  # Application Entry Point
+│   ├── Dockerfile               # Docker Image Build
+│   └── swagger.yml              # API Documentation
+│
 ├── 📂 frontend/                 # React Frontend Application
 │   ├── 📂 src/
 │   │   ├── 📂 context/          # React Context (Auth)
@@ -90,35 +116,8 @@ schoolms-go/
 │   ├── package.json
 │   └── vite.config.ts
 │
-├── 📂 middleware/               # HTTP Middleware
-│   └── auth.go                  # JWT Auth & Role Guards
-│
-├── 📂 models/                   # Database Models (GORM)
-│   ├── db.go                    # Database Connection
-│   ├── user.go                  # User Model
-│   ├── school.go                # School Model
-│   ├── class_student.go         # Class & Student Models
-│   ├── finance.go               # Fee & Payment Models
-│   └── invite.go                # Invite Code Model
-│
-├── 📂 routes/                   # API Route Handlers
-│   ├── auth.go                  # /auth/* endpoints
-│   ├── superadmin.go            # /superadmin/* endpoints
-│   ├── invite.go                # /invites/* endpoints
-│   ├── class.go                 # /classes/* endpoints
-│   ├── student.go               # /students/* endpoints
-│   ├── finance.go               # /finance/* endpoints
-│   └── reports.go               # /reports/* endpoints
-│
-├── 📂 utils/                    # Utility Functions
-│   ├── jwt.go                   # JWT Token Generation
-│   ├── seeder.go                # Database Seeder
-│   └── errors.go                # Custom Error Types
-│
-├── main.go                      # Application Entry Point
-├── Dockerfile                   # Docker Image Build
 ├── docker-compose.yml           # Docker Compose Config
-├── swagger.yml                  # API Documentation
+├── LICENSE                      # MIT License
 └── README.md                    # This File
 ```
 
@@ -140,7 +139,7 @@ git clone https://github.com/lewisnakhungu/schoolms-go.git
 cd schoolms-go
 
 # Start the backend
-./run_backend.sh
+cd backend && ./run_backend.sh
 
 # In a new terminal, start the frontend
 cd frontend && npm install && npm run dev
