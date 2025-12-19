@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"fmt"
 	"net/http"
 	"schoolms-go/middleware"
 	"schoolms-go/models"
@@ -35,6 +36,8 @@ func RegisterFinanceRoutes(router *gin.RouterGroup) {
 			adminFinance.GET("/payments", listPayments)
 			adminFinance.GET("/students/:id/balance", getStudentBalance)
 			adminFinance.GET("/dashboard-stats", getFinanceDashboardStats)
+			adminFinance.GET("/receipts/:id", getReceipt)
+			adminFinance.GET("/receipts/:id/print", getReceiptPrint)
 		}
 
 		// Student can view their own balance
@@ -287,4 +290,147 @@ func getFinanceDashboardStats(c *gin.Context) {
 		"defaulters_count":    defaultersCount,
 		"recent_payments":     recentPayments,
 	})
+}
+
+// getReceipt - Returns receipt data as JSON
+func getReceipt(c *gin.Context) {
+	schoolID := c.MustGet("schoolID").(uint)
+	paymentID := c.Param("id")
+
+	var payment models.Payment
+	if err := models.DB.Where("id = ? AND school_id = ?", paymentID, schoolID).First(&payment).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Payment not found"})
+		return
+	}
+
+	// Get student info
+	var student models.Student
+	models.DB.Where("id = ?", payment.StudentID).Preload("User").First(&student)
+
+	// Get school info
+	var school models.School
+	models.DB.Where("id = ?", schoolID).First(&school)
+
+	// Get vote head allocations if available
+	var allocations []models.PaymentAllocation
+	models.DB.Where("payment_id = ?", payment.ID).Preload("VoteHead").Find(&allocations)
+
+	c.JSON(http.StatusOK, gin.H{
+		"receipt_number": fmt.Sprintf("RCP-%06d", payment.ID),
+		"payment":        payment,
+		"student": gin.H{
+			"id":     student.ID,
+			"name":   student.User.Email,
+			"adm_no": student.EnrollmentNumber,
+		},
+		"school": gin.H{
+			"id":   school.ID,
+			"name": school.Name,
+		},
+		"allocations": allocations,
+		"date":        payment.CreatedAt.Format("2006-01-02 15:04:05"),
+	})
+}
+
+// getReceiptPrint - Returns printable HTML receipt
+func getReceiptPrint(c *gin.Context) {
+	schoolID := c.MustGet("schoolID").(uint)
+	paymentID := c.Param("id")
+	format := c.DefaultQuery("format", "a4") // a4 or thermal
+
+	var payment models.Payment
+	if err := models.DB.Where("id = ? AND school_id = ?", paymentID, schoolID).First(&payment).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Payment not found"})
+		return
+	}
+
+	// Get student info
+	var student models.Student
+	models.DB.Where("id = ?", payment.StudentID).Preload("User").First(&student)
+
+	// Get school info
+	var school models.School
+	models.DB.Where("id = ?", schoolID).First(&school)
+
+	// Get vote head allocations
+	var allocations []models.PaymentAllocation
+	models.DB.Where("payment_id = ?", payment.ID).Preload("VoteHead").Find(&allocations)
+
+	// Build vote head breakdown HTML
+	voteHeadRows := ""
+	for _, alloc := range allocations {
+		voteHeadRows += fmt.Sprintf("<tr><td>%s</td><td style='text-align:right'>KES %.2f</td></tr>",
+			alloc.VoteHead.Name, alloc.Amount)
+	}
+
+	var width, padding string
+	if format == "thermal" {
+		width = "80mm"
+		padding = "5px"
+	} else {
+		width = "210mm"
+		padding = "20px"
+	}
+
+	html := fmt.Sprintf(`
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Receipt #RCP-%06d</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: %s; width: %s; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h1 { margin: 0; font-size: 1.5em; }
+        .header p { margin: 5px 0; color: #666; }
+        table { width: 100%%; border-collapse: collapse; margin: 15px 0; }
+        th, td { padding: 8px; border-bottom: 1px solid #ddd; text-align: left; }
+        .total { font-weight: bold; font-size: 1.2em; }
+        .footer { margin-top: 30px; text-align: center; font-size: 0.9em; color: #666; }
+        .signature { margin-top: 50px; border-top: 1px solid #000; width: 200px; text-align: center; }
+        @media print { body { width: auto; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>%s</h1>
+        <p>Official Fee Receipt</p>
+    </div>
+    
+    <table>
+        <tr><th>Receipt No:</th><td>RCP-%06d</td></tr>
+        <tr><th>Date:</th><td>%s</td></tr>
+        <tr><th>Student:</th><td>%s (%s)</td></tr>
+        <tr><th>Payment Method:</th><td>%s</td></tr>
+        <tr><th>Reference:</th><td>%s</td></tr>
+    </table>
+
+    <h3>Vote Head Breakdown</h3>
+    <table>
+        <thead><tr><th>Vote Head</th><th style='text-align:right'>Amount</th></tr></thead>
+        <tbody>%s</tbody>
+    </table>
+
+    <table>
+        <tr class="total"><td>TOTAL PAID</td><td style='text-align:right'>KES %.2f</td></tr>
+    </table>
+
+    <div class="footer">
+        <p>Thank you for your payment!</p>
+        <div class="signature">Served By: _____________</div>
+    </div>
+</body>
+</html>`,
+		payment.ID, padding, width,
+		school.Name,
+		payment.ID,
+		payment.CreatedAt.Format("2006-01-02 15:04"),
+		student.User.Email, student.EnrollmentNumber,
+		payment.Method,
+		payment.Reference,
+		voteHeadRows,
+		payment.Amount)
+
+	c.Header("Content-Type", "text/html")
+	c.String(http.StatusOK, html)
 }

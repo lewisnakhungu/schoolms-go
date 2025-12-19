@@ -47,6 +47,7 @@ export default function DashboardLayout() {
                                 <NavItem icon={<FileText />} label="Reports" to="/dashboard/reports" />
                                 <NavItem icon={<Bell />} label="Notifications" to="/dashboard/notifications" />
                                 <NavItem icon={<MessageSquare />} label="Support" to="/dashboard/tickets" />
+                                <NavItem icon={<ClipboardCheck />} label="Audit Logs" to="/dashboard/audit-logs" />
                             </>
                         )}
                         {role === 'STUDENT' && (

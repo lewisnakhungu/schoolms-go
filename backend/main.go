@@ -54,6 +54,7 @@ func main() {
 	routes.RegisterTVETRoutes(api)
 	routes.RegisterSMSRoutes(api)
 	routes.RegisterImportRoutes(api)
+	routes.RegisterAuditRoutes(api)
 
 	// Serve uploaded files
 	r.Static("/uploads", "./uploads")
