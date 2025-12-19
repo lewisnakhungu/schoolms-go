@@ -50,6 +50,13 @@ export default function DashboardLayout() {
                                 <NavItem icon={<HelpCircle />} label="Get Help" to="/dashboard/support" />
                             </>
                         )}
+                        {role === 'TEACHER' && (
+                            <>
+                                <NavItem icon={<LayoutDashboard />} label="Dashboard" to="/dashboard" />
+                                <NavItem icon={<BookOpen />} label="My Classes" to="/dashboard/classes" />
+                                <NavItem icon={<Users />} label="My Students" to="/dashboard/students" />
+                            </>
+                        )}
                         {role === 'SUPERADMIN' && (
                             <>
                                 <NavItem icon={<School />} label="All Schools" to="/superadmin" />
@@ -130,6 +137,13 @@ export default function DashboardLayout() {
                                     <>
                                         <NavItem icon={<LayoutDashboard />} label="My Dashboard" to="/dashboard" onClick={() => setIsSidebarOpen(false)} />
                                         <NavItem icon={<HelpCircle />} label="Get Help" to="/dashboard/support" onClick={() => setIsSidebarOpen(false)} />
+                                    </>
+                                )}
+                                {role === 'TEACHER' && (
+                                    <>
+                                        <NavItem icon={<LayoutDashboard />} label="Dashboard" to="/dashboard" onClick={() => setIsSidebarOpen(false)} />
+                                        <NavItem icon={<BookOpen />} label="My Classes" to="/dashboard/classes" onClick={() => setIsSidebarOpen(false)} />
+                                        <NavItem icon={<Users />} label="My Students" to="/dashboard/students" onClick={() => setIsSidebarOpen(false)} />
                                     </>
                                 )}
                                 {role === 'SUPERADMIN' && (
