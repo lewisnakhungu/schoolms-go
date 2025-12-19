@@ -27,16 +27,107 @@ type DischargeStudentInput struct {
 
 func RegisterStudentRoutes(router *gin.RouterGroup) {
 	students := router.Group("/students")
-	students.Use(middleware.AuthMiddleware(), middleware.RoleGuard("SCHOOLADMIN", "TEACHER"))
+	students.Use(middleware.AuthMiddleware())
 	{
-		students.GET("", listStudents)
-		students.GET("/analytics", getStudentAnalytics)
-		students.GET("/:id", getStudent)
-		students.GET("/:id/financial-report", getStudentFinancialReport)
-		students.PUT("/:id", updateStudent)
-		students.POST("/:id/admit", admitStudent)
-		students.POST("/:id/discharge", dischargeStudent)
+		// Student can view their own profile
+		students.GET("/me", middleware.RoleGuard("STUDENT"), getMyProfile)
+
+		// Admin/Teacher routes
+		adminRoutes := students.Group("")
+		adminRoutes.Use(middleware.RoleGuard("SCHOOLADMIN", "TEACHER"))
+		{
+			adminRoutes.GET("", listStudents)
+			adminRoutes.GET("/analytics", getStudentAnalytics)
+			adminRoutes.GET("/:id", getStudent)
+			adminRoutes.GET("/:id/financial-report", getStudentFinancialReport)
+			adminRoutes.PUT("/:id", updateStudent)
+			adminRoutes.POST("/:id/admit", admitStudent)
+			adminRoutes.POST("/:id/discharge", dischargeStudent)
+		}
 	}
+}
+
+// getMyProfile - Student gets their own full profile
+func getMyProfile(c *gin.Context) {
+	schoolID := c.MustGet("schoolID").(uint)
+	userID := c.MustGet("userID").(uint)
+
+	// Get student with all relations
+	var student models.Student
+	if err := models.DB.Where("user_id = ? AND school_id = ?", userID, schoolID).
+		Preload("User").Preload("Class").Preload("Class.Teacher").First(&student).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Student profile not found"})
+		return
+	}
+
+	// Get school info
+	var school models.School
+	models.DB.First(&school, schoolID)
+
+	// Get notifications for this student
+	var notifications []models.Notification
+	notifQuery := models.DB.Where("school_id = ?", schoolID).
+		Where("target_type = ? OR (target_type = ? AND target_id = ?)",
+			"ALL",
+			"STUDENT", student.ID,
+		)
+	if student.ClassID != nil {
+		notifQuery = notifQuery.Or("target_type = ? AND target_id = ?", "CLASS", *student.ClassID)
+	}
+	notifQuery.Order("created_at DESC").Limit(5).Find(&notifications)
+
+	// Calculate fees
+	var totalFees, totalPayments float64
+	if student.ClassID != nil {
+		models.DB.Model(&models.FeeStructure{}).
+			Where("class_id = ? AND school_id = ?", *student.ClassID, schoolID).
+			Select("COALESCE(SUM(amount), 0)").Scan(&totalFees)
+	}
+	models.DB.Model(&models.Payment{}).
+		Where("student_id = ? AND school_id = ?", student.ID, schoolID).
+		Select("COALESCE(SUM(amount), 0)").Scan(&totalPayments)
+
+	// Build response
+	response := gin.H{
+		"student": gin.H{
+			"id":                student.ID,
+			"enrollment_number": student.EnrollmentNumber,
+			"status":            student.Status,
+			"admission_date":    student.AdmissionDate,
+			"email":             student.User.Email,
+			"full_name":         student.User.FullName,
+		},
+		"school": gin.H{
+			"id":   school.ID,
+			"name": school.Name,
+		},
+		"class":         nil,
+		"teacher":       nil,
+		"notifications": notifications,
+		"finance": gin.H{
+			"total_fees":     totalFees,
+			"total_payments": totalPayments,
+			"balance":        totalFees - totalPayments,
+		},
+	}
+
+	// Add class info if assigned
+	if student.Class != nil {
+		response["class"] = gin.H{
+			"id":   student.Class.ID,
+			"name": student.Class.Name,
+		}
+		// Add teacher info if class has a teacher
+		if student.Class.Teacher != nil {
+			response["teacher"] = gin.H{
+				"id":        student.Class.Teacher.ID,
+				"email":     student.Class.Teacher.Email,
+				"full_name": student.Class.Teacher.FullName,
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 func listStudents(c *gin.Context) {
