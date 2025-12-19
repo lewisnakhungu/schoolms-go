@@ -30,6 +30,11 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
+	// Health check endpoint (for Railway/Docker)
+	r.GET("/api/v1/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok"})
+	})
+
 	// Setup Routes
 	api := r.Group("/api/v1")
 	routes.RegisterAuthRoutes(api)
