@@ -44,6 +44,7 @@ func main() {
 	routes.RegisterTeacherRoutes(api)
 	routes.RegisterContentRoutes(api)
 	routes.RegisterGradeRoutes(api)
+	routes.RegisterAttendanceRoutes(api)
 
 	// Serve uploaded files
 	r.Static("/uploads", "./uploads")

@@ -16,6 +16,7 @@ import NotificationsPage from './pages/NotificationsPage';
 import StudentSupportPage from './pages/StudentSupportPage';
 import ClassContentPage from './pages/ClassContentPage';
 import GradesPage from './pages/GradesPage';
+import AttendancePage from './pages/AttendancePage';
 import { ToastProvider } from './components/Toast';
 import './index.css';
 
@@ -39,6 +40,7 @@ const App = () => {
                             <Route path="support" element={<StudentSupportPage />} />
                             <Route path="classes/:classId/content" element={<ClassContentPage />} />
                             <Route path="grades" element={<GradesPage />} />
+                            <Route path="attendance" element={<AttendancePage />} />
                         </Route>
 
                         <Route path="/superadmin" element={<DashboardLayout />}>
