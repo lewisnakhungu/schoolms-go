@@ -40,6 +40,7 @@ export default function DashboardLayout() {
                                 <NavItem icon={<BookOpen />} label="Classes" to="/dashboard/classes" />
                                 <NavItem icon={<ClipboardCheck />} label="Attendance" to="/dashboard/attendance" />
                                 <NavItem icon={<Calendar />} label="Timetable" to="/dashboard/timetable" />
+                                <NavItem icon={<DollarSign />} label="Vote Heads" to="/dashboard/vote-heads" />
                                 <NavItem icon={<CreditCard />} label="Finance" to="/dashboard/finance" />
                                 <NavItem icon={<FileText />} label="Reports" to="/dashboard/reports" />
                                 <NavItem icon={<Bell />} label="Notifications" to="/dashboard/notifications" />

@@ -51,6 +51,7 @@ func ConnectDB() {
 		&Ticket{}, &Notification{}, &NotificationRead{},
 		&ClassContent{}, &Grade{},
 		&Attendance{}, &Timetable{}, &ParentStudent{}, &Exam{}, &ExamResult{},
+		&VoteHead{}, &FeeItem{}, &VoteHeadBalance{}, &PaymentAllocation{}, &MPESATransaction{},
 	)
 
 	DB = db
