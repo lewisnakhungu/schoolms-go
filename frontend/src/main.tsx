@@ -16,38 +16,41 @@ import NotificationsPage from './pages/NotificationsPage';
 import StudentSupportPage from './pages/StudentSupportPage';
 import ClassContentPage from './pages/ClassContentPage';
 import GradesPage from './pages/GradesPage';
+import { ToastProvider } from './components/Toast';
 import './index.css';
 
 const App = () => {
     return (
-        <AuthProvider>
-            <BrowserRouter>
-                <Routes>
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/signup" element={<Signup />} />
+        <ToastProvider>
+            <AuthProvider>
+                <BrowserRouter>
+                    <Routes>
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/signup" element={<Signup />} />
 
-                    <Route path="/dashboard" element={<DashboardLayout />}>
-                        <Route index element={<DashboardHome />} />
-                        <Route path="students" element={<StudentsPage />} />
-                        <Route path="classes" element={<ClassesPage />} />
-                        <Route path="finance" element={<FinancePage />} />
-                        <Route path="reports" element={<ReportsPage />} />
-                        <Route path="tickets" element={<TicketsPage />} />
-                        <Route path="notifications" element={<NotificationsPage />} />
-                        <Route path="support" element={<StudentSupportPage />} />
-                        <Route path="classes/:classId/content" element={<ClassContentPage />} />
-                        <Route path="grades" element={<GradesPage />} />
-                    </Route>
+                        <Route path="/dashboard" element={<DashboardLayout />}>
+                            <Route index element={<DashboardHome />} />
+                            <Route path="students" element={<StudentsPage />} />
+                            <Route path="classes" element={<ClassesPage />} />
+                            <Route path="finance" element={<FinancePage />} />
+                            <Route path="reports" element={<ReportsPage />} />
+                            <Route path="tickets" element={<TicketsPage />} />
+                            <Route path="notifications" element={<NotificationsPage />} />
+                            <Route path="support" element={<StudentSupportPage />} />
+                            <Route path="classes/:classId/content" element={<ClassContentPage />} />
+                            <Route path="grades" element={<GradesPage />} />
+                        </Route>
 
-                    <Route path="/superadmin" element={<DashboardLayout />}>
-                        <Route index element={<SuperAdminDashboard />} />
-                        <Route path="tickets" element={<TicketsPage />} />
-                    </Route>
+                        <Route path="/superadmin" element={<DashboardLayout />}>
+                            <Route index element={<SuperAdminDashboard />} />
+                            <Route path="tickets" element={<TicketsPage />} />
+                        </Route>
 
-                    <Route path="/" element={<Navigate to="/login" replace />} />
-                </Routes>
-            </BrowserRouter>
-        </AuthProvider>
+                        <Route path="/" element={<Navigate to="/login" replace />} />
+                    </Routes>
+                </BrowserRouter>
+            </AuthProvider>
+        </ToastProvider>
     );
 };
 
