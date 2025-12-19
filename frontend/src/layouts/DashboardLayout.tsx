@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Outlet, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, School, Users, CreditCard, FileText, Menu, X, ChevronRight, LayoutDashboard, BookOpen, MessageSquare, Bell, HelpCircle, Award, DollarSign, TrendingUp, ClipboardCheck, Calendar } from 'lucide-react';
+import { LogOut, School, Users, CreditCard, FileText, Menu, X, ChevronRight, LayoutDashboard, BookOpen, MessageSquare, Bell, HelpCircle, Award, DollarSign, TrendingUp, ClipboardCheck, Calendar, Building2, Upload } from 'lucide-react';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -41,7 +41,9 @@ export default function DashboardLayout() {
                                 <NavItem icon={<ClipboardCheck />} label="Attendance" to="/dashboard/attendance" />
                                 <NavItem icon={<Calendar />} label="Timetable" to="/dashboard/timetable" />
                                 <NavItem icon={<DollarSign />} label="Vote Heads" to="/dashboard/vote-heads" />
+                                <NavItem icon={<Building2 />} label="Attachments" to="/dashboard/attachments" />
                                 <NavItem icon={<CreditCard />} label="Finance" to="/dashboard/finance" />
+                                <NavItem icon={<Upload />} label="Import" to="/dashboard/import" />
                                 <NavItem icon={<FileText />} label="Reports" to="/dashboard/reports" />
                                 <NavItem icon={<Bell />} label="Notifications" to="/dashboard/notifications" />
                                 <NavItem icon={<MessageSquare />} label="Support" to="/dashboard/tickets" />

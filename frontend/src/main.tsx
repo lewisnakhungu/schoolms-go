@@ -19,6 +19,8 @@ import GradesPage from './pages/GradesPage';
 import AttendancePage from './pages/AttendancePage';
 import TimetablePage from './pages/TimetablePage';
 import VoteHeadPage from './pages/VoteHeadPage';
+import IndustrialAttachmentPage from './pages/IndustrialAttachmentPage';
+import ImportPage from './pages/ImportPage';
 import LandingPage from './pages/LandingPage';
 import { ToastProvider } from './components/Toast';
 import './index.css';
@@ -46,6 +48,8 @@ const App = () => {
                             <Route path="attendance" element={<AttendancePage />} />
                             <Route path="timetable" element={<TimetablePage />} />
                             <Route path="vote-heads" element={<VoteHeadPage />} />
+                            <Route path="attachments" element={<IndustrialAttachmentPage />} />
+                            <Route path="import" element={<ImportPage />} />
                         </Route>
 
                         <Route path="/superadmin" element={<DashboardLayout />}>
