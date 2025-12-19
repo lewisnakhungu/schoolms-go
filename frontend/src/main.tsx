@@ -13,6 +13,7 @@ import ReportsPage from './pages/ReportsPage';
 import DashboardHome from './pages/DashboardHome';
 import TicketsPage from './pages/TicketsPage';
 import NotificationsPage from './pages/NotificationsPage';
+import StudentSupportPage from './pages/StudentSupportPage';
 import './index.css';
 
 const App = () => {
@@ -31,6 +32,7 @@ const App = () => {
                         <Route path="reports" element={<ReportsPage />} />
                         <Route path="tickets" element={<TicketsPage />} />
                         <Route path="notifications" element={<NotificationsPage />} />
+                        <Route path="support" element={<StudentSupportPage />} />
                     </Route>
 
                     <Route path="/superadmin" element={<DashboardLayout />}>

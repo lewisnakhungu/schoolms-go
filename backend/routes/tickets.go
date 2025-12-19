@@ -24,9 +24,14 @@ func RegisterTicketRoutes(router *gin.RouterGroup) {
 	tickets := router.Group("/tickets")
 	tickets.Use(middleware.AuthMiddleware())
 	{
-		// SchoolAdmin can create and view their tickets
-		tickets.POST("", middleware.RoleGuard("SCHOOLADMIN"), createTicket)
-		tickets.GET("", listTickets) // Both roles can list (filtered)
+		// SchoolAdmin and Students can create tickets
+		tickets.POST("", middleware.RoleGuard("SCHOOLADMIN", "STUDENT"), createTicket)
+
+		// Students can view their own tickets
+		tickets.GET("/my", middleware.RoleGuard("STUDENT"), getMyTickets)
+
+		// Admin roles can list all
+		tickets.GET("", middleware.RoleGuard("SCHOOLADMIN", "SUPERADMIN"), listTickets)
 		tickets.GET("/:id", getTicket)
 
 		// SuperAdmin can update tickets
@@ -83,6 +88,18 @@ func listTickets(c *gin.Context) {
 		schoolID := c.MustGet("schoolID").(uint)
 		query.Where("school_id = ?", schoolID).Find(&tickets)
 	}
+
+	c.JSON(http.StatusOK, tickets)
+}
+
+// getMyTickets - Student sees only their own tickets
+func getMyTickets(c *gin.Context) {
+	userID := c.MustGet("userID").(uint)
+	schoolID := c.MustGet("schoolID").(uint)
+
+	var tickets []models.Ticket
+	models.DB.Where("user_id = ? AND school_id = ?", userID, schoolID).
+		Order("created_at DESC").Find(&tickets)
 
 	c.JSON(http.StatusOK, tickets)
 }
