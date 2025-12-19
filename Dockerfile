@@ -1,4 +1,4 @@
-# Build Stage
+# Build Stage - SchoolMS Backend
 FROM golang:1.22-alpine AS builder
 
 WORKDIR /app
@@ -6,15 +6,12 @@ WORKDIR /app
 # Install build dependencies
 RUN apk add --no-cache git
 
-# Copy dependencies first for caching
-COPY go.mod go.sum* ./
-RUN go mod download || true
+# Copy Go modules from backend folder
+COPY backend/go.mod backend/go.sum ./
+RUN go mod download
 
-# Copy source code
-COPY . .
-
-# Ensure go.sum exists
-RUN go mod tidy
+# Copy backend source code
+COPY backend/ .
 
 # Build the binary
 RUN CGO_ENABLED=0 GOOS=linux go build -o schoolms-binary .
