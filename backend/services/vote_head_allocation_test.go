@@ -170,6 +170,87 @@ func TestGetStudentVoteHeadBreakdown(t *testing.T) {
 	assert.Equal(t, "Tuition", breakdown[0]["vote_head_name"])
 }
 
+// ============ Edge Case: Inactive Vote Head ============
+
+func TestAllocatePaymentToVoteHeads_InactiveVoteHead(t *testing.T) {
+	db := setupTestDB(t)
+	defer func() { sqlDB, _ := db.DB(); sqlDB.Close() }()
+
+	school := models.School{Name: "Test School"}
+	db.Create(&school)
+
+	user := models.User{Email: "student@test.com", Role: "STUDENT", SchoolID: &school.ID}
+	db.Create(&user)
+
+	student := models.Student{UserID: user.ID, SchoolID: school.ID, Status: "ACTIVE"}
+	db.Create(&student)
+
+	// Create one active and one inactive vote head
+	activeVH := models.VoteHead{SchoolID: school.ID, Name: "Tuition", Priority: 1, IsActive: true}
+	inactiveVH := models.VoteHead{SchoolID: school.ID, Name: "Old Fee", Priority: 2, IsActive: false}
+	db.Create(&activeVH)
+	db.Create(&inactiveVH)
+
+	// Create balances for both
+	db.Create(&models.VoteHeadBalance{StudentID: student.ID, VoteHeadID: activeVH.ID, SchoolID: school.ID, Balance: 3000})
+	db.Create(&models.VoteHeadBalance{StudentID: student.ID, VoteHeadID: inactiveVH.ID, SchoolID: school.ID, Balance: 2000})
+
+	// Payment of exactly what active vote head needs
+	payment := models.Payment{StudentID: student.ID, SchoolID: school.ID, Amount: 3000, Method: "MPESA"}
+	db.Create(&payment)
+
+	allocations, err := services.AllocatePaymentToVoteHeads(&payment, student.ID, school.ID)
+
+	assert.NoError(t, err)
+	// Should only allocate to active vote head
+	assert.Len(t, allocations, 1)
+	assert.Equal(t, activeVH.ID, allocations[0].VoteHeadID)
+	assert.Equal(t, 3000.0, allocations[0].Amount)
+
+	// Verify active vote head is now cleared
+	var activeBal models.VoteHeadBalance
+	db.Where("vote_head_id = ?", activeVH.ID).First(&activeBal)
+	assert.Equal(t, 0.0, activeBal.Balance)
+
+	// Verify inactive vote head balance is unchanged
+	var inactiveBal models.VoteHeadBalance
+	db.Where("vote_head_id = ?", inactiveVH.ID).First(&inactiveBal)
+	assert.Equal(t, 2000.0, inactiveBal.Balance)
+}
+
+// ============ Edge Case: Zero Payment ============
+
+func TestAllocatePaymentToVoteHeads_ZeroPayment(t *testing.T) {
+	db := setupTestDB(t)
+	defer func() { sqlDB, _ := db.DB(); sqlDB.Close() }()
+
+	school := models.School{Name: "Test School"}
+	db.Create(&school)
+
+	user := models.User{Email: "student@test.com", Role: "STUDENT", SchoolID: &school.ID}
+	db.Create(&user)
+
+	student := models.Student{UserID: user.ID, SchoolID: school.ID, Status: "ACTIVE"}
+	db.Create(&student)
+
+	voteHead := models.VoteHead{SchoolID: school.ID, Name: "Tuition", Priority: 1, IsActive: true}
+	db.Create(&voteHead)
+
+	db.Create(&models.VoteHeadBalance{StudentID: student.ID, VoteHeadID: voteHead.ID, SchoolID: school.ID, Balance: 5000})
+
+	// Zero payment should return error
+	payment := models.Payment{StudentID: student.ID, SchoolID: school.ID, Amount: 0, Method: "CASH"}
+	db.Create(&payment)
+
+	allocations, err := services.AllocatePaymentToVoteHeads(&payment, student.ID, school.ID)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "positive")
+	assert.Nil(t, allocations)
+}
+
+// ============ Precision Tests ============
+
 func TestAllocatePaymentToVoteHeads_DecimalPrecision(t *testing.T) {
 	db := setupTestDB(t)
 	defer func() { sqlDB, _ := db.DB(); sqlDB.Close() }()
@@ -232,4 +313,30 @@ func TestAllocatePaymentToVoteHeads_LargeAmount(t *testing.T) {
 	var balance models.VoteHeadBalance
 	db.Where("student_id = ?", student.ID).First(&balance)
 	assert.Equal(t, 250000.0, balance.Balance)
+}
+
+// ============ Negative Payment ============
+
+func TestAllocatePaymentToVoteHeads_NegativePayment(t *testing.T) {
+	db := setupTestDB(t)
+	defer func() { sqlDB, _ := db.DB(); sqlDB.Close() }()
+
+	school := models.School{Name: "Test School"}
+	db.Create(&school)
+
+	user := models.User{Email: "student@test.com", Role: "STUDENT", SchoolID: &school.ID}
+	db.Create(&user)
+
+	student := models.Student{UserID: user.ID, SchoolID: school.ID, Status: "ACTIVE"}
+	db.Create(&student)
+
+	// Negative payment should return error
+	payment := models.Payment{StudentID: student.ID, SchoolID: school.ID, Amount: -1000, Method: "CASH"}
+	db.Create(&payment)
+
+	allocations, err := services.AllocatePaymentToVoteHeads(&payment, student.ID, school.ID)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "positive")
+	assert.Nil(t, allocations)
 }

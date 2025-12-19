@@ -14,11 +14,12 @@ func AllocatePaymentToVoteHeads(payment *models.Payment, studentID, schoolID uin
 		return nil, errors.New("payment amount must be positive")
 	}
 
-	// Get student's vote head balances ordered by vote head priority
+	// Get student's vote head balances ordered by vote head priority (only active vote heads)
 	var balances []models.VoteHeadBalance
 	err := models.DB.
 		Joins("JOIN vote_heads ON vote_heads.id = vote_head_balances.vote_head_id").
 		Where("vote_head_balances.student_id = ? AND vote_head_balances.school_id = ?", studentID, schoolID).
+		Where("vote_heads.is_active = ?", true).
 		Order("vote_heads.priority ASC").
 		Preload("VoteHead").
 		Find(&balances).Error
@@ -32,10 +33,11 @@ func AllocatePaymentToVoteHeads(payment *models.Payment, studentID, schoolID uin
 		if err := initializeStudentVoteHeadBalances(studentID, schoolID); err != nil {
 			return nil, err
 		}
-		// Re-fetch
+		// Re-fetch (also filter by active vote heads)
 		models.DB.
 			Joins("JOIN vote_heads ON vote_heads.id = vote_head_balances.vote_head_id").
 			Where("vote_head_balances.student_id = ? AND vote_head_balances.school_id = ?", studentID, schoolID).
+			Where("vote_heads.is_active = ?", true).
 			Order("vote_heads.priority ASC").
 			Preload("VoteHead").
 			Find(&balances)
