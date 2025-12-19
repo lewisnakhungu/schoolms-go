@@ -32,9 +32,9 @@ func RegisterStudentRoutes(router *gin.RouterGroup) {
 		// Student can view their own profile
 		students.GET("/me", middleware.RoleGuard("STUDENT"), getMyProfile)
 
-		// Admin/Teacher routes
+		// Admin/Teacher/Finance routes
 		adminRoutes := students.Group("")
-		adminRoutes.Use(middleware.RoleGuard("SCHOOLADMIN", "TEACHER"))
+		adminRoutes.Use(middleware.RoleGuard("SCHOOLADMIN", "TEACHER", "FINANCE"))
 		{
 			adminRoutes.GET("", listStudents)
 			adminRoutes.GET("/analytics", getStudentAnalytics)

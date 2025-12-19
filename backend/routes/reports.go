@@ -18,7 +18,7 @@ type Defaulter struct {
 
 func RegisterReportRoutes(router *gin.RouterGroup) {
 	reports := router.Group("/reports")
-	reports.Use(middleware.AuthMiddleware(), middleware.RoleGuard("SCHOOLADMIN"))
+	reports.Use(middleware.AuthMiddleware(), middleware.RoleGuard("SCHOOLADMIN", "FINANCE"))
 	{
 		reports.GET("/defaulters", listDefaulters)
 		reports.GET("/defaulters/print", printDefaulters)

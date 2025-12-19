@@ -15,10 +15,12 @@ type CreateClassInput struct {
 
 func RegisterClassRoutes(router *gin.RouterGroup) {
 	classes := router.Group("/classes")
-	classes.Use(middleware.AuthMiddleware(), middleware.RoleGuard("SCHOOLADMIN")) // Only admins manage classes
+	classes.Use(middleware.AuthMiddleware())
 	{
-		classes.POST("", createClass)
-		classes.GET("", listClasses)
+		// Create - SCHOOLADMIN only
+		classes.POST("", middleware.RoleGuard("SCHOOLADMIN"), createClass)
+		// Read - SCHOOLADMIN, TEACHER, FINANCE
+		classes.GET("", middleware.RoleGuard("SCHOOLADMIN", "TEACHER", "FINANCE"), listClasses)
 	}
 }
 
