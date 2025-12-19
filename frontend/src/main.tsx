@@ -17,6 +17,7 @@ import StudentSupportPage from './pages/StudentSupportPage';
 import ClassContentPage from './pages/ClassContentPage';
 import GradesPage from './pages/GradesPage';
 import AttendancePage from './pages/AttendancePage';
+import LandingPage from './pages/LandingPage';
 import { ToastProvider } from './components/Toast';
 import './index.css';
 
@@ -48,7 +49,7 @@ const App = () => {
                             <Route path="tickets" element={<TicketsPage />} />
                         </Route>
 
-                        <Route path="/" element={<Navigate to="/login" replace />} />
+                        <Route path="/" element={<LandingPage />} />
                     </Routes>
                 </BrowserRouter>
             </AuthProvider>
