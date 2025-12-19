@@ -42,6 +42,11 @@ func main() {
 	routes.RegisterTicketRoutes(api)
 	routes.RegisterNotificationRoutes(api)
 	routes.RegisterTeacherRoutes(api)
+	routes.RegisterContentRoutes(api)
+	routes.RegisterGradeRoutes(api)
+
+	// Serve uploaded files
+	r.Static("/uploads", "./uploads")
 
 	// Seed Superadmin
 	utils.SeedSuperAdmin()

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
-import { Loader2, Users, BookOpen, School, Bell, AlertCircle, GraduationCap, Send } from 'lucide-react';
+import { Loader2, Users, BookOpen, School, Bell, AlertCircle, GraduationCap, Send, FileText } from 'lucide-react';
 
 interface TeacherProfile {
     teacher: {
@@ -37,6 +38,7 @@ interface Student {
 
 export default function TeacherDashboard() {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [profile, setProfile] = useState<TeacherProfile | null>(null);
     const [classes, setClasses] = useState<ClassWithCount[]>([]);
     const [students, setStudents] = useState<Student[]>([]);
@@ -207,8 +209,8 @@ export default function TeacherDashboard() {
                             <div
                                 key={cls.id}
                                 className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${selectedClassId === cls.id
-                                        ? 'border-primary-500 bg-primary-50'
-                                        : 'border-slate-100 hover:border-primary-200 bg-slate-50'
+                                    ? 'border-primary-500 bg-primary-50'
+                                    : 'border-slate-100 hover:border-primary-200 bg-slate-50'
                                     }`}
                                 onClick={() => handleClassFilter(selectedClassId === cls.id ? null : cls.id)}
                             >
@@ -220,6 +222,13 @@ export default function TeacherDashboard() {
                                         title="Send notification to class"
                                     >
                                         <Bell className="h-4 w-4" />
+                                    </button>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); navigate(`/dashboard/classes/${cls.id}/content`); }}
+                                        className="p-1.5 text-indigo-600 hover:bg-indigo-100 rounded-lg transition-colors"
+                                        title="Manage course content"
+                                    >
+                                        <FileText className="h-4 w-4" />
                                     </button>
                                 </div>
                                 <p className="text-sm text-slate-500 flex items-center gap-1">
@@ -270,8 +279,8 @@ export default function TeacherDashboard() {
                                         </p>
                                     </div>
                                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${student.status === 'ENROLLED' ? 'bg-green-100 text-green-800' :
-                                            student.status === 'PENDING' ? 'bg-amber-100 text-amber-800' :
-                                                'bg-slate-100 text-slate-600'
+                                        student.status === 'PENDING' ? 'bg-amber-100 text-amber-800' :
+                                            'bg-slate-100 text-slate-600'
                                         }`}>
                                         {student.status}
                                     </span>

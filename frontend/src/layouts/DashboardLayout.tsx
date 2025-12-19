@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Outlet, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, School, Users, CreditCard, FileText, Menu, X, ChevronRight, LayoutDashboard, BookOpen, MessageSquare, Bell, HelpCircle } from 'lucide-react';
+import { LogOut, School, Users, CreditCard, FileText, Menu, X, ChevronRight, LayoutDashboard, BookOpen, MessageSquare, Bell, HelpCircle, Award } from 'lucide-react';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -47,6 +47,7 @@ export default function DashboardLayout() {
                         {role === 'STUDENT' && (
                             <>
                                 <NavItem icon={<LayoutDashboard />} label="My Dashboard" to="/dashboard" />
+                                <NavItem icon={<Award />} label="My Grades" to="/dashboard/grades" />
                                 <NavItem icon={<HelpCircle />} label="Get Help" to="/dashboard/support" />
                             </>
                         )}
@@ -55,6 +56,7 @@ export default function DashboardLayout() {
                                 <NavItem icon={<LayoutDashboard />} label="Dashboard" to="/dashboard" />
                                 <NavItem icon={<BookOpen />} label="My Classes" to="/dashboard/classes" />
                                 <NavItem icon={<Users />} label="My Students" to="/dashboard/students" />
+                                <NavItem icon={<Award />} label="Grades" to="/dashboard/grades" />
                             </>
                         )}
                         {role === 'SUPERADMIN' && (
@@ -136,6 +138,7 @@ export default function DashboardLayout() {
                                 {role === 'STUDENT' && (
                                     <>
                                         <NavItem icon={<LayoutDashboard />} label="My Dashboard" to="/dashboard" onClick={() => setIsSidebarOpen(false)} />
+                                        <NavItem icon={<Award />} label="My Grades" to="/dashboard/grades" onClick={() => setIsSidebarOpen(false)} />
                                         <NavItem icon={<HelpCircle />} label="Get Help" to="/dashboard/support" onClick={() => setIsSidebarOpen(false)} />
                                     </>
                                 )}
@@ -144,6 +147,7 @@ export default function DashboardLayout() {
                                         <NavItem icon={<LayoutDashboard />} label="Dashboard" to="/dashboard" onClick={() => setIsSidebarOpen(false)} />
                                         <NavItem icon={<BookOpen />} label="My Classes" to="/dashboard/classes" onClick={() => setIsSidebarOpen(false)} />
                                         <NavItem icon={<Users />} label="My Students" to="/dashboard/students" onClick={() => setIsSidebarOpen(false)} />
+                                        <NavItem icon={<Award />} label="Grades" to="/dashboard/grades" onClick={() => setIsSidebarOpen(false)} />
                                     </>
                                 )}
                                 {role === 'SUPERADMIN' && (

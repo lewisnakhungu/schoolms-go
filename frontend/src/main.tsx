@@ -14,6 +14,8 @@ import DashboardHome from './pages/DashboardHome';
 import TicketsPage from './pages/TicketsPage';
 import NotificationsPage from './pages/NotificationsPage';
 import StudentSupportPage from './pages/StudentSupportPage';
+import ClassContentPage from './pages/ClassContentPage';
+import GradesPage from './pages/GradesPage';
 import './index.css';
 
 const App = () => {
@@ -33,6 +35,8 @@ const App = () => {
                         <Route path="tickets" element={<TicketsPage />} />
                         <Route path="notifications" element={<NotificationsPage />} />
                         <Route path="support" element={<StudentSupportPage />} />
+                        <Route path="classes/:classId/content" element={<ClassContentPage />} />
+                        <Route path="grades" element={<GradesPage />} />
                     </Route>
 
                     <Route path="/superadmin" element={<DashboardLayout />}>
