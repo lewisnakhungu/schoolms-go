@@ -21,12 +21,15 @@ func ConnectDB() {
 	var db *gorm.DB
 	var err error
 
+	// Railway provides DATABASE_URL or individual vars
+	databaseURL := os.Getenv("DATABASE_URL")
 	dbHost := os.Getenv("DB_HOST")
 
-	if dbHost == "" {
-		fmt.Println("No DB_HOST found, using SQLite (schoolms.db)")
-		db, err = gorm.Open(sqlite.Open("schoolms.db"), &gorm.Config{})
-	} else {
+	if databaseURL != "" {
+		// Railway PostgreSQL format
+		fmt.Println("Using DATABASE_URL for PostgreSQL connection")
+		db, err = gorm.Open(postgres.Open(databaseURL), &gorm.Config{})
+	} else if dbHost != "" {
 		dsn := fmt.Sprintf(
 			"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
 			dbHost,
@@ -35,10 +38,15 @@ func ConnectDB() {
 			os.Getenv("DB_NAME"),
 			os.Getenv("DB_PORT"),
 		)
+		fmt.Println("Using DB_HOST for PostgreSQL connection")
 		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	} else {
+		fmt.Println("No DATABASE_URL or DB_HOST found, using SQLite (schoolms.db)")
+		db, err = gorm.Open(sqlite.Open("schoolms.db"), &gorm.Config{})
 	}
 
 	if err != nil {
+		fmt.Printf("Database connection error: %v\n", err)
 		panic("Failed to connect to database!")
 	}
 
