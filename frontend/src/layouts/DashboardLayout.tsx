@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Outlet, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, School, Users, CreditCard, FileText, Menu, X, ChevronRight, LayoutDashboard, BookOpen, MessageSquare, Bell, HelpCircle, Award } from 'lucide-react';
+import { LogOut, School, Users, CreditCard, FileText, Menu, X, ChevronRight, LayoutDashboard, BookOpen, MessageSquare, Bell, HelpCircle, Award, DollarSign, TrendingUp } from 'lucide-react';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -63,6 +63,13 @@ export default function DashboardLayout() {
                             <>
                                 <NavItem icon={<School />} label="All Schools" to="/superadmin" />
                                 <NavItem icon={<MessageSquare />} label="Tickets" to="/superadmin/tickets" />
+                            </>
+                        )}
+                        {role === 'FINANCE' && (
+                            <>
+                                <NavItem icon={<LayoutDashboard />} label="Dashboard" to="/dashboard" />
+                                <NavItem icon={<DollarSign />} label="Fees" to="/dashboard/finance" />
+                                <NavItem icon={<TrendingUp />} label="Reports" to="/dashboard/reports" />
                             </>
                         )}
                     </nav>
@@ -154,6 +161,13 @@ export default function DashboardLayout() {
                                     <>
                                         <NavItem icon={<School />} label="All Schools" to="/superadmin" onClick={() => setIsSidebarOpen(false)} />
                                         <NavItem icon={<MessageSquare />} label="Tickets" to="/superadmin/tickets" onClick={() => setIsSidebarOpen(false)} />
+                                    </>
+                                )}
+                                {role === 'FINANCE' && (
+                                    <>
+                                        <NavItem icon={<LayoutDashboard />} label="Dashboard" to="/dashboard" onClick={() => setIsSidebarOpen(false)} />
+                                        <NavItem icon={<DollarSign />} label="Fees" to="/dashboard/finance" onClick={() => setIsSidebarOpen(false)} />
+                                        <NavItem icon={<TrendingUp />} label="Reports" to="/dashboard/reports" onClick={() => setIsSidebarOpen(false)} />
                                     </>
                                 )}
                             </nav>
