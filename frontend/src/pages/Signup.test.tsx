@@ -8,6 +8,14 @@ vi.mock('../services/api', () => ({
     },
 }))
 
+vi.mock('react-router-dom', async () => {
+    const actual = await vi.importActual('react-router-dom')
+    return {
+        ...actual,
+        useNavigate: () => vi.fn(),
+    }
+})
+
 import api from '../services/api'
 
 describe('Signup Page', () => {
@@ -15,76 +23,159 @@ describe('Signup Page', () => {
         vi.clearAllMocks()
     })
 
-    it('renders signup form', () => {
+    it('renders activate account title', () => {
         render(<Signup />)
-
-        expect(screen.getByPlaceholderText(/email/i)).toBeInTheDocument()
-        expect(screen.getByPlaceholderText(/password/i)).toBeInTheDocument()
-        expect(screen.getByPlaceholderText(/invite code/i)).toBeInTheDocument()
+        expect(screen.getByText('Activate Account')).toBeInTheDocument()
     })
 
-    it('submits form with valid data', async () => {
-        const mockResponse = {
-            data: {
-                token: 'test-token',
-                user: { id: 1, email: 'new@example.com', role: 'STUDENT' }
-            }
-        }
-        vi.mocked(api.post).mockResolvedValueOnce(mockResponse)
+    it('renders instruction text', () => {
+        render(<Signup />)
+        expect(screen.getByText('Enter your invite code to get started.')).toBeInTheDocument()
+    })
+
+    it('renders invite code label', () => {
+        render(<Signup />)
+        expect(screen.getByText('Invite Code')).toBeInTheDocument()
+    })
+
+    it('renders email label', () => {
+        render(<Signup />)
+        expect(screen.getByText('Email')).toBeInTheDocument()
+    })
+
+    it('renders create password label', () => {
+        render(<Signup />)
+        expect(screen.getByText('Create Password')).toBeInTheDocument()
+    })
+
+    it('renders invite code input with placeholder', () => {
+        render(<Signup />)
+        expect(screen.getByPlaceholderText('INV-XXXX-XXXX')).toBeInTheDocument()
+    })
+
+    it('renders email input with placeholder', () => {
+        render(<Signup />)
+        expect(screen.getByPlaceholderText('student@school.com')).toBeInTheDocument()
+    })
+
+    it('renders password input with placeholder', () => {
+        render(<Signup />)
+        expect(screen.getByPlaceholderText('••••••••')).toBeInTheDocument()
+    })
+
+    it('renders complete registration button', () => {
+        render(<Signup />)
+        expect(screen.getByRole('button', { name: /complete registration/i })).toBeInTheDocument()
+    })
+
+    it('renders back to login link', () => {
+        render(<Signup />)
+        expect(screen.getByText('Back to Login')).toBeInTheDocument()
+    })
+
+    it('renders SchoolMS branding', () => {
+        render(<Signup />)
+        expect(screen.getByText('SchoolMS')).toBeInTheDocument()
+    })
+
+    it('renders community heading', () => {
+        render(<Signup />)
+        expect(screen.getByText('Community')).toBeInTheDocument()
+    })
+
+    it('invite code input is required', () => {
+        render(<Signup />)
+        const input = screen.getByPlaceholderText('INV-XXXX-XXXX') as HTMLInputElement
+        expect(input.required).toBe(true)
+    })
+
+    it('email input is required', () => {
+        render(<Signup />)
+        const input = screen.getByPlaceholderText('student@school.com') as HTMLInputElement
+        expect(input.required).toBe(true)
+    })
+
+    it('password input is required', () => {
+        render(<Signup />)
+        const input = screen.getByPlaceholderText('••••••••') as HTMLInputElement
+        expect(input.required).toBe(true)
+    })
+
+    it('allows entering invite code', () => {
+        render(<Signup />)
+        const input = screen.getByPlaceholderText('INV-XXXX-XXXX') as HTMLInputElement
+        fireEvent.change(input, { target: { value: 'ABC123' } })
+        expect(input.value).toBe('ABC123')
+    })
+
+    it('allows entering email', () => {
+        render(<Signup />)
+        const input = screen.getByPlaceholderText('student@school.com') as HTMLInputElement
+        fireEvent.change(input, { target: { value: 'new@test.com' } })
+        expect(input.value).toBe('new@test.com')
+    })
+
+    it('allows entering password', () => {
+        render(<Signup />)
+        const input = screen.getByPlaceholderText('••••••••') as HTMLInputElement
+        fireEvent.change(input, { target: { value: 'password123' } })
+        expect(input.value).toBe('password123')
+    })
+
+    it('submits signup form with credentials', async () => {
+        vi.mocked(api.post)
+            .mockResolvedValueOnce({ data: {} }) // signup
+            .mockResolvedValueOnce({  // auto-login
+                data: {
+                    access_token: 'test-token',
+                    user: { id: 1, email: 'new@test.com', role: 'STUDENT' }
+                }
+            })
 
         render(<Signup />)
 
-        fireEvent.change(screen.getByPlaceholderText(/email/i), {
-            target: { value: 'new@example.com' }
-        })
-        fireEvent.change(screen.getByPlaceholderText(/password/i), {
-            target: { value: 'password123' }
-        })
-        fireEvent.change(screen.getByPlaceholderText(/invite code/i), {
+        fireEvent.change(screen.getByPlaceholderText('INV-XXXX-XXXX'), {
             target: { value: 'ABC123' }
         })
+        fireEvent.change(screen.getByPlaceholderText('student@school.com'), {
+            target: { value: 'new@test.com' }
+        })
+        fireEvent.change(screen.getByPlaceholderText('••••••••'), {
+            target: { value: 'password123' }
+        })
 
-        const submitButton = screen.getByRole('button', { name: /create account/i })
-        fireEvent.click(submitButton)
+        fireEvent.click(screen.getByRole('button', { name: /complete registration/i }))
 
         await waitFor(() => {
             expect(api.post).toHaveBeenCalledWith('/auth/signup', {
-                email: 'new@example.com',
+                email: 'new@test.com',
                 password: 'password123',
                 invite_code: 'ABC123'
             })
         })
     })
 
-    it('shows error on invalid invite code', async () => {
+    it('shows error on failed signup', async () => {
         vi.mocked(api.post).mockRejectedValueOnce({
             response: { data: { error: 'Invalid invite code' } }
         })
 
         render(<Signup />)
 
-        fireEvent.change(screen.getByPlaceholderText(/email/i), {
-            target: { value: 'new@example.com' }
-        })
-        fireEvent.change(screen.getByPlaceholderText(/password/i), {
-            target: { value: 'password123' }
-        })
-        fireEvent.change(screen.getByPlaceholderText(/invite code/i), {
+        fireEvent.change(screen.getByPlaceholderText('INV-XXXX-XXXX'), {
             target: { value: 'INVALID' }
         })
+        fireEvent.change(screen.getByPlaceholderText('student@school.com'), {
+            target: { value: 'test@test.com' }
+        })
+        fireEvent.change(screen.getByPlaceholderText('••••••••'), {
+            target: { value: 'password123' }
+        })
 
-        const submitButton = screen.getByRole('button', { name: /create account/i })
-        fireEvent.click(submitButton)
+        fireEvent.click(screen.getByRole('button', { name: /complete registration/i }))
 
         await waitFor(() => {
-            expect(api.post).toHaveBeenCalled()
+            expect(screen.getByText('Invalid invite code')).toBeInTheDocument()
         })
-    })
-
-    it('has link to login page', () => {
-        render(<Signup />)
-
-        const loginLink = screen.getByText(/sign in/i)
-        expect(loginLink).toBeInTheDocument()
     })
 })

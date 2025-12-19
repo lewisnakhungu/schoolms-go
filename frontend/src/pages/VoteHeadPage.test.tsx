@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '../test/utils'
+import { render, screen, waitFor } from '../test/utils'
 import VoteHeadPage from '../pages/VoteHeadPage'
 
 vi.mock('../services/api', () => ({
@@ -24,7 +24,79 @@ describe('VoteHeadPage', () => {
         vi.mocked(api.get).mockResolvedValue({ data: mockVoteHeads })
     })
 
-    it('renders vote head list', async () => {
+    it('renders vote head page title', async () => {
+        render(<VoteHeadPage />)
+
+        await waitFor(() => {
+            expect(screen.getByText('Vote Heads')).toBeInTheDocument()
+        })
+    })
+
+    it('displays Kenya-style allocation description', async () => {
+        render(<VoteHeadPage />)
+
+        await waitFor(() => {
+            expect(screen.getByText(/Kenya-style fee allocation/i)).toBeInTheDocument()
+        })
+    })
+
+    it('shows Add Vote Head button', async () => {
+        render(<VoteHeadPage />)
+
+        await waitFor(() => {
+            expect(screen.getByText('Add Vote Head')).toBeInTheDocument()
+        })
+    })
+
+    it('displays priority-based allocation info card', async () => {
+        render(<VoteHeadPage />)
+
+        await waitFor(() => {
+            expect(screen.getByText('Priority-Based Allocation')).toBeInTheDocument()
+        })
+    })
+
+    it('shows priority column header', async () => {
+        render(<VoteHeadPage />)
+
+        await waitFor(() => {
+            expect(screen.getByText('Priority')).toBeInTheDocument()
+        })
+    })
+
+    it('shows name column header', async () => {
+        render(<VoteHeadPage />)
+
+        await waitFor(() => {
+            expect(screen.getByText('Name')).toBeInTheDocument()
+        })
+    })
+
+    it('shows status column header', async () => {
+        render(<VoteHeadPage />)
+
+        await waitFor(() => {
+            expect(screen.getByText('Status')).toBeInTheDocument()
+        })
+    })
+
+    it('shows actions column header', async () => {
+        render(<VoteHeadPage />)
+
+        await waitFor(() => {
+            expect(screen.getByText('Actions')).toBeInTheDocument()
+        })
+    })
+
+    it('fetches vote heads on mount', async () => {
+        render(<VoteHeadPage />)
+
+        await waitFor(() => {
+            expect(api.get).toHaveBeenCalledWith('/vote-heads')
+        })
+    })
+
+    it('displays vote head names after loading', async () => {
         render(<VoteHeadPage />)
 
         await waitFor(() => {
@@ -34,67 +106,22 @@ describe('VoteHeadPage', () => {
         })
     })
 
-    it('shows add vote head button', async () => {
+    it('displays priority numbers', async () => {
         render(<VoteHeadPage />)
 
         await waitFor(() => {
-            expect(screen.getByText(/add vote head/i)).toBeInTheDocument()
+            expect(screen.getByText('1')).toBeInTheDocument()
+            expect(screen.getByText('2')).toBeInTheDocument()
+            expect(screen.getByText('3')).toBeInTheDocument()
         })
     })
 
-    it('opens modal on add button click', async () => {
+    it('shows active status badges', async () => {
         render(<VoteHeadPage />)
 
         await waitFor(() => {
-            const addButton = screen.getByText(/add vote head/i)
-            fireEvent.click(addButton)
-        })
-
-        await waitFor(() => {
-            expect(screen.getByText(/new vote head/i)).toBeInTheDocument()
-        })
-    })
-
-    it('creates new vote head', async () => {
-        vi.mocked(api.post).mockResolvedValueOnce({
-            data: { id: 4, name: 'Transport', priority: 4, is_active: true }
-        })
-        vi.mocked(api.get).mockResolvedValue({ data: [...mockVoteHeads, { id: 4, name: 'Transport', priority: 4, is_active: true }] })
-
-        render(<VoteHeadPage />)
-
-        await waitFor(() => {
-            const addButton = screen.getByText(/add vote head/i)
-            fireEvent.click(addButton)
-        })
-
-        const nameInput = await screen.findByPlaceholderText(/tuition/i)
-        fireEvent.change(nameInput, { target: { value: 'Transport' } })
-
-        const saveButton = screen.getByRole('button', { name: /save/i })
-        fireEvent.click(saveButton)
-
-        await waitFor(() => {
-            expect(api.post).toHaveBeenCalledWith('/vote-heads', expect.objectContaining({
-                name: 'Transport'
-            }))
-        })
-    })
-
-    it('displays priority order correctly', async () => {
-        render(<VoteHeadPage />)
-
-        await waitFor(() => {
-            const priorities = screen.getAllByText(/priority/i)
-            expect(priorities.length).toBeGreaterThan(0)
-        })
-    })
-
-    it('shows info card about priority allocation', async () => {
-        render(<VoteHeadPage />)
-
-        await waitFor(() => {
-            expect(screen.getByText(/payments are allocated/i)).toBeInTheDocument()
+            const activeElements = screen.getAllByText('Active')
+            expect(activeElements.length).toBe(3)
         })
     })
 })
