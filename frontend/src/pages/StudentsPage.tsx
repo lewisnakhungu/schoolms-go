@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
-import { Users, Loader2, RefreshCw, UserCheck, BookOpen, Plus, UserMinus, FileText, Search, Filter, DollarSign, AlertCircle } from 'lucide-react';
+import { Users, Loader2, RefreshCw, UserCheck, BookOpen, Plus, UserMinus, FileText, Search, Filter, DollarSign, AlertCircle, Copy, Check } from 'lucide-react';
 
 interface Student {
     id: number;
@@ -39,10 +39,12 @@ export default function StudentsPage() {
 
     // Modals
     const [showInviteModal, setShowInviteModal] = useState(false);
+    const [showInviteResult, setShowInviteResult] = useState<{ email: string; code: string } | null>(null);
     const [showAdmitModal, setShowAdmitModal] = useState(false);
     const [showDischargeModal, setShowDischargeModal] = useState(false);
     const [showReportModal, setShowReportModal] = useState(false);
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+    const [copied, setCopied] = useState(false);
 
     // Form states
     const [inviteEmail, setInviteEmail] = useState('');
@@ -83,16 +85,22 @@ export default function StudentsPage() {
                 role: 'STUDENT',
                 class_id: inviteClassId || undefined
             });
-            setSuccess(`Invite sent! Code: ${res.data.code}`);
+            // Show persistent result modal
+            setShowInviteResult({ email: inviteEmail, code: res.data.code });
             setShowInviteModal(false);
             setInviteEmail('');
             setInviteClassId('');
-            setTimeout(() => setSuccess(''), 5000);
         } catch (err: any) {
             setError(err.response?.data?.error || 'Failed to send invite');
         } finally {
             setSubmitting(false);
         }
+    };
+
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
     };
 
     const handleAdmit = async () => {
@@ -402,6 +410,50 @@ export default function StudentsPage() {
                     </form>
                 </Modal>
             )}
+
+            {/* Invite Result Modal - Shows invite code with copy button */}
+            {showInviteResult && (
+                <Modal title="✅ Invite Sent!" onClose={() => setShowInviteResult(null)}>
+                    <div className="space-y-4">
+                        <p className="text-slate-600">
+                            Invite sent to <span className="font-semibold">{showInviteResult.email}</span>
+                        </p>
+
+                        <div className="p-4 bg-green-50 rounded-xl border border-green-200">
+                            <p className="text-sm text-green-700 mb-2">Share this invite code with the student:</p>
+                            <div className="flex items-center gap-2">
+                                <code className="flex-1 p-3 bg-white rounded-lg text-lg font-mono font-bold text-green-800 text-center border border-green-200">
+                                    {showInviteResult.code}
+                                </code>
+                                <button
+                                    onClick={() => copyToClipboard(showInviteResult.code)}
+                                    className={`p-3 rounded-lg transition-colors ${copied ? 'bg-green-600 text-white' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
+                                    title="Copy to clipboard"
+                                >
+                                    {copied ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="p-3 bg-slate-50 rounded-xl text-sm text-slate-600">
+                            <p className="font-medium mb-1">📋 Instructions for student:</p>
+                            <ol className="list-decimal list-inside space-y-1 text-slate-500">
+                                <li>Go to the signup page</li>
+                                <li>Enter this invite code</li>
+                                <li>Complete registration</li>
+                            </ol>
+                        </div>
+
+                        <button
+                            onClick={() => setShowInviteResult(null)}
+                            className="w-full px-4 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 font-medium"
+                        >
+                            Done
+                        </button>
+                    </div>
+                </Modal>
+            )}
+
 
             {/* Admit Modal */}
             {showAdmitModal && selectedStudent && (
