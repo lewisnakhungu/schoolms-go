@@ -50,6 +50,7 @@ func main() {
 	routes.RegisterParentLinkRoutes(api)
 	routes.RegisterAnalyticsRoutes(api)
 	routes.RegisterVoteHeadRoutes(api)
+	routes.RegisterMpesaRoutes(api)
 
 	// Serve uploaded files
 	r.Static("/uploads", "./uploads")
