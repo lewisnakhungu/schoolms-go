@@ -11,7 +11,7 @@ import (
 )
 
 type CreateInviteInput struct {
-	Role string `json:"role" binding:"required,oneof=TEACHER STUDENT"`
+	Role string `json:"role" binding:"required,oneof=TEACHER STUDENT FINANCE"`
 }
 
 func RegisterInviteRoutes(router *gin.RouterGroup) {
