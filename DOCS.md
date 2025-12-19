@@ -112,6 +112,7 @@ cd frontend && npm run dev
 - View fee balances
 - Generate defaulter reports
 - View payment history
+- **Print receipts (Thermal & A4 PDF)**
 - Finance analytics dashboard
 
 **Dashboard**: `FinanceDashboard.tsx`
@@ -240,7 +241,17 @@ POST /api/v1/finance/fees            # Create fee structure
 POST /api/v1/finance/payments        # Record payment
 GET  /api/v1/finance/balances        # Get student balances
 GET  /api/v1/finance/dashboard-stats # Finance overview
+GET  /api/v1/finance/receipts/:id    # Get receipt (A4 PDF)
+GET  /api/v1/finance/receipts/:id/thermal  # Thermal printer format
 ```
+
+**Receipt Features**:
+- School logo and header
+- Vote head breakdown showing allocation
+- Payment method (Cash/M-PESA/Bank)
+- "Served By" signature line
+- Unique receipt number
+- Thermal (58mm/80mm) and A4 PDF formats
 
 ---
 
@@ -312,6 +323,99 @@ GET  /api/v1/finance/dashboard-stats # Finance overview
 
 ---
 
+### 10. Audit Logs & Compliance
+
+**Files**:
+- Backend: `models/audit.go`
+- Frontend: `pages/AuditLogPage.tsx` *(planned)*
+
+**Purpose**: System integrity and accountability for principals and auditors.
+
+**What is logged**:
+| Action | Description |
+|--------|-------------|
+| `CREATE_PAYMENT` | New payment recorded |
+| `DELETE_PAYMENT` | Payment deleted/reversed |
+| `UPDATE_FEE_STRUCTURE` | Fee structure modified |
+| `UPDATE_GRADE` | Student grade changed |
+| `DELETE_STUDENT` | Student record deleted |
+| `LOGIN` | User login (success/failure) |
+| `ROLE_CHANGE` | User role modification |
+
+**Audit Log Entry Structure**:
+```json
+{
+  "id": 1,
+  "user_id": 5,
+  "action": "UPDATE_GRADE",
+  "entity_type": "Grade",
+  "entity_id": 123,
+  "old_value": "{\"score\": 75}",
+  "new_value": "{\"score\": 85}",
+  "ip_address": "192.168.1.10",
+  "created_at": "2024-12-19T10:30:00Z"
+}
+```
+
+**API Endpoints**:
+```bash
+GET /api/v1/audit-logs               # List logs (Admin only)
+GET /api/v1/audit-logs/export        # Export for external auditors
+```
+
+**Filtering Options**:
+- By User
+- By Action Type
+- By Date Range
+- By Entity Type
+
+**Maintenance**:
+- Logs are immutable (cannot be deleted)
+- Retention period: Configurable in `models/audit.go`
+- Export to CSV/PDF for TSC or Ministry audits
+
+---
+
+### 11. Internal Memos (Official Communications)
+
+**Files**:
+- Backend: `routes/memos.go` *(planned)*
+- Frontend: `pages/MemosPage.tsx` *(planned)*
+
+**Purpose**: Distinguish official administrative communications from simple notifications.
+
+**Memos vs Notifications**:
+| Memos | Notifications |
+|-------|---------------|
+| Official documents | Simple alerts |
+| Rich text (formatting) | Plain text |
+| Attachments (PDFs, circulars) | No attachments |
+| Requires acknowledgment | Read status only |
+| Example: "2025 Fee Structure" | Example: "Meeting at 2pm" |
+
+**Features**:
+- Rich text editor (bold, lists, tables)
+- File attachments (Ministry circulars, exam schedules)
+- Target: All staff, specific department, all parents
+- Acknowledgment tracking (who has read)
+- Archive and search
+
+**Use Cases**:
+- Ministry of Education circulars
+- New fee structure announcements
+- Exam schedules with timetable PDF
+- Staff policy updates
+
+**API Endpoints**:
+```bash
+GET    /api/v1/memos               # List memos
+POST   /api/v1/memos               # Create memo
+GET    /api/v1/memos/:id           # Get memo with attachments
+POST   /api/v1/memos/:id/acknowledge # Mark as read
+```
+
+---
+
 ## Kenya-Specific Features
 
 ### 1. Vote Head Accounting
@@ -375,6 +479,8 @@ MPESA_CALLBACK_URL=https://yourserver.com/api/v1/mpesa
 - Register C2B URLs on Safaricom Daraja portal
 - Test in sandbox before production
 - Monitor `mpesa_transactions` table for failed payments
+- **Certificate Rotation**: Safaricom passkeys/certificates expire periodically. If payments fail with "Initiator Authentication Error", regenerate security credentials on Daraja portal.
+- Check certificate expiry dates quarterly
 
 ---
 
@@ -685,6 +791,26 @@ sqlite3 backend/schoolms.db
 # Check file format (CSV/XLSX)
 # Ensure required columns exist
 # Check for duplicate admission numbers
+# For large files (>1000 rows), consider chunked import
+```
+
+**7. M-PESA Certificate/Passkey Expired**
+```bash
+# Error: "Initiator Authentication Error" or "Bad Request"
+# Solution:
+# 1. Login to Daraja portal (developer.safaricom.co.ke)
+# 2. Go to your app > Security Credentials
+# 3. Generate new credentials
+# 4. Update MPESA_PASSKEY in environment variables
+# 5. Restart backend server
+```
+
+**8. Large Excel Import Timeout**
+```bash
+# For files with >1000 rows:
+# 1. Split into multiple smaller files
+# 2. Or use batch import feature
+# Future: Queue-based background processing (planned)
 ```
 
 ---
