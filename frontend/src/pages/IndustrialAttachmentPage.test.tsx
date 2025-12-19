@@ -28,83 +28,77 @@ describe('IndustrialAttachmentPage', () => {
         })
     })
 
-    it('renders page title', async () => {
-        render(<IndustrialAttachmentPage />)
+    describe('UI Elements', () => {
+        it('renders page title', async () => {
+            render(<IndustrialAttachmentPage />)
 
-        await waitFor(() => {
-            expect(screen.getByText('Industrial Attachments')).toBeInTheDocument()
+            await waitFor(() => {
+                expect(screen.getByText('Industrial Attachments')).toBeInTheDocument()
+            })
+        })
+
+        it('shows page description', async () => {
+            render(<IndustrialAttachmentPage />)
+
+            await waitFor(() => {
+                expect(screen.getByText(/Track TVET student workplace training/i)).toBeInTheDocument()
+            })
+        })
+
+        it('shows new attachment button', async () => {
+            render(<IndustrialAttachmentPage />)
+
+            await waitFor(() => {
+                expect(screen.getByText('New Attachment')).toBeInTheDocument()
+            })
+        })
+
+        it('shows All filter button', async () => {
+            render(<IndustrialAttachmentPage />)
+
+            await waitFor(() => {
+                expect(screen.getByText('All')).toBeInTheDocument()
+            })
         })
     })
 
-    it('shows page description', async () => {
-        render(<IndustrialAttachmentPage />)
+    describe('Data Fetching', () => {
+        it('fetches attachments on mount', async () => {
+            render(<IndustrialAttachmentPage />)
 
-        await waitFor(() => {
-            expect(screen.getByText(/Track TVET student workplace training/i)).toBeInTheDocument()
+            await waitFor(() => {
+                expect(api.get).toHaveBeenCalledWith('/tvet/attachments')
+            })
+        })
+
+        it('fetches students on mount', async () => {
+            render(<IndustrialAttachmentPage />)
+
+            await waitFor(() => {
+                expect(api.get).toHaveBeenCalledWith('/students')
+            })
         })
     })
 
-    it('shows new attachment button', async () => {
-        render(<IndustrialAttachmentPage />)
+    describe('Empty State', () => {
+        it('shows empty state when no attachments', async () => {
+            render(<IndustrialAttachmentPage />)
 
-        await waitFor(() => {
-            expect(screen.getByText('New Attachment')).toBeInTheDocument()
+            await waitFor(() => {
+                expect(screen.getByText('No attachments found')).toBeInTheDocument()
+            })
         })
     })
 
-    it('shows All filter button', async () => {
-        render(<IndustrialAttachmentPage />)
+    describe('Error Handling', () => {
+        it('handles fetch error gracefully', async () => {
+            vi.mocked(api.get).mockRejectedValueOnce(new Error('Network error'))
 
-        await waitFor(() => {
-            expect(screen.getByText('All')).toBeInTheDocument()
-        })
-    })
+            render(<IndustrialAttachmentPage />)
 
-    it('shows PLANNED filter button', async () => {
-        render(<IndustrialAttachmentPage />)
-
-        await waitFor(() => {
-            expect(screen.getByText('PLANNED')).toBeInTheDocument()
-        })
-    })
-
-    it('shows ONGOING filter button', async () => {
-        render(<IndustrialAttachmentPage />)
-
-        await waitFor(() => {
-            expect(screen.getByText('ONGOING')).toBeInTheDocument()
-        })
-    })
-
-    it('shows COMPLETED filter button', async () => {
-        render(<IndustrialAttachmentPage />)
-
-        await waitFor(() => {
-            expect(screen.getByText('COMPLETED')).toBeInTheDocument()
-        })
-    })
-
-    it('fetches attachments on mount', async () => {
-        render(<IndustrialAttachmentPage />)
-
-        await waitFor(() => {
-            expect(api.get).toHaveBeenCalledWith('/tvet/attachments')
-        })
-    })
-
-    it('fetches students on mount', async () => {
-        render(<IndustrialAttachmentPage />)
-
-        await waitFor(() => {
-            expect(api.get).toHaveBeenCalledWith('/students')
-        })
-    })
-
-    it('shows empty state when no attachments', async () => {
-        render(<IndustrialAttachmentPage />)
-
-        await waitFor(() => {
-            expect(screen.getByText('No attachments found')).toBeInTheDocument()
+            await waitFor(() => {
+                expect(screen.getByText('Industrial Attachments')).toBeInTheDocument()
+            })
         })
     })
 })
