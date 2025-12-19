@@ -4,8 +4,9 @@ test.describe('Authentication Flow', () => {
     test('login page loads correctly', async ({ page }) => {
         await page.goto('/login');
 
-        await expect(page.getByPlaceholder(/email/i)).toBeVisible();
-        await expect(page.getByPlaceholder(/password/i)).toBeVisible();
+        // Actual placeholders from Login.tsx
+        await expect(page.getByPlaceholder('admin@school.com')).toBeVisible();
+        await expect(page.getByPlaceholder('••••••••')).toBeVisible();
         await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
     });
 
@@ -35,15 +36,17 @@ test.describe('Authentication Flow', () => {
     test('signup page loads correctly', async ({ page }) => {
         await page.goto('/signup');
 
-        await expect(page.getByPlaceholder(/email/i)).toBeVisible();
-        await expect(page.getByPlaceholder(/password/i)).toBeVisible();
-        await expect(page.getByPlaceholder(/invite code/i)).toBeVisible();
+        // Actual placeholders from Signup.tsx
+        await expect(page.getByPlaceholder('student@school.com')).toBeVisible();
+        await expect(page.getByPlaceholder('••••••••')).toBeVisible();
+        await expect(page.getByPlaceholder('INV-XXXX-XXXX')).toBeVisible();
     });
 
     test('has link to login from signup', async ({ page }) => {
         await page.goto('/signup');
 
-        const loginLink = page.getByText(/sign in/i);
+        // Actual link text: "Back to Login"
+        const loginLink = page.getByText(/back to login/i);
         await expect(loginLink).toBeVisible();
         await loginLink.click();
 
