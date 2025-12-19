@@ -52,6 +52,8 @@ func main() {
 	routes.RegisterVoteHeadRoutes(api)
 	routes.RegisterMpesaRoutes(api)
 	routes.RegisterTVETRoutes(api)
+	routes.RegisterSMSRoutes(api)
+	routes.RegisterImportRoutes(api)
 
 	// Serve uploaded files
 	r.Static("/uploads", "./uploads")
