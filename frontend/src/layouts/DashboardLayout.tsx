@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Outlet, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, School, Users, CreditCard, FileText, Menu, X, ChevronRight, LayoutDashboard, BookOpen, MessageSquare, Bell, HelpCircle, Award, DollarSign, TrendingUp, ClipboardCheck } from 'lucide-react';
+import { LogOut, School, Users, CreditCard, FileText, Menu, X, ChevronRight, LayoutDashboard, BookOpen, MessageSquare, Bell, HelpCircle, Award, DollarSign, TrendingUp, ClipboardCheck, Calendar } from 'lucide-react';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -39,6 +39,7 @@ export default function DashboardLayout() {
                                 <NavItem icon={<Users />} label="Students" to="/dashboard/students" />
                                 <NavItem icon={<BookOpen />} label="Classes" to="/dashboard/classes" />
                                 <NavItem icon={<ClipboardCheck />} label="Attendance" to="/dashboard/attendance" />
+                                <NavItem icon={<Calendar />} label="Timetable" to="/dashboard/timetable" />
                                 <NavItem icon={<CreditCard />} label="Finance" to="/dashboard/finance" />
                                 <NavItem icon={<FileText />} label="Reports" to="/dashboard/reports" />
                                 <NavItem icon={<Bell />} label="Notifications" to="/dashboard/notifications" />
