@@ -74,6 +74,14 @@ export default function DashboardLayout() {
                                 <NavItem icon={<TrendingUp />} label="Reports" to="/dashboard/reports" />
                             </>
                         )}
+                        {role === 'PARENT' && (
+                            <>
+                                <NavItem icon={<LayoutDashboard />} label="My Children" to="/dashboard" />
+                                <NavItem icon={<Award />} label="Grades" to="/dashboard/grades" />
+                                <NavItem icon={<ClipboardCheck />} label="Attendance" to="/dashboard/attendance" />
+                                <NavItem icon={<CreditCard />} label="Fees" to="/dashboard/finance" />
+                            </>
+                        )}
                     </nav>
                 </div>
 

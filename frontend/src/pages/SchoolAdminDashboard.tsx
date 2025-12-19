@@ -41,7 +41,7 @@ export default function SchoolAdminDashboard() {
 
     // Invite modal state
     const [showInviteModal, setShowInviteModal] = useState(false);
-    const [inviteRole, setInviteRole] = useState<'STUDENT' | 'TEACHER' | 'FINANCE'>('STUDENT');
+    const [inviteRole, setInviteRole] = useState<'STUDENT' | 'TEACHER' | 'FINANCE' | 'PARENT'>('STUDENT');
     const [creatingInvite, setCreatingInvite] = useState(false);
     const [newInviteCode, setNewInviteCode] = useState('');
 
@@ -224,12 +224,13 @@ export default function SchoolAdminDashboard() {
                                     <label className="block text-sm font-medium text-slate-700 mb-2">Role</label>
                                     <select
                                         value={inviteRole}
-                                        onChange={(e) => setInviteRole(e.target.value as 'STUDENT' | 'TEACHER' | 'FINANCE')}
+                                        onChange={(e) => setInviteRole(e.target.value as 'STUDENT' | 'TEACHER' | 'FINANCE' | 'PARENT')}
                                         className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none"
                                     >
                                         <option value="STUDENT">Student</option>
                                         <option value="TEACHER">Teacher</option>
                                         <option value="FINANCE">Finance Officer</option>
+                                        <option value="PARENT">Parent/Guardian</option>
                                     </select>
                                 </div>
                                 <div className="flex gap-3">

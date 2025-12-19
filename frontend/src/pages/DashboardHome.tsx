@@ -3,6 +3,7 @@ import StudentDashboard from './StudentDashboard';
 import SchoolAdminDashboard from './SchoolAdminDashboard';
 import TeacherDashboard from './TeacherDashboard';
 import FinanceDashboard from './FinanceDashboard';
+import ParentDashboard from './ParentDashboard';
 
 export default function DashboardHome() {
     const { role } = useAuth();
@@ -21,6 +22,10 @@ export default function DashboardHome() {
 
     if (role === 'FINANCE') {
         return <FinanceDashboard />;
+    }
+
+    if (role === 'PARENT') {
+        return <ParentDashboard />;
     }
 
     return (
