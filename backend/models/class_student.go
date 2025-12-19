@@ -17,16 +17,20 @@ type Class struct {
 }
 
 type Student struct {
-	ID               uint      `gorm:"primaryKey" json:"id"`
-	UserID           uint      `gorm:"not null;uniqueIndex" json:"user_id"`
-	ClassID          *uint     `gorm:"index" json:"class_id"`
-	SchoolID         uint      `gorm:"not null;index" json:"school_id"`
-	EnrollmentNumber string    `json:"enrollment_number"`
-	CreatedAt        time.Time `json:"created_at"`
-	UpdatedAt        time.Time `json:"updated_at"`
+	ID               uint       `gorm:"primaryKey" json:"id"`
+	UserID           uint       `gorm:"not null;uniqueIndex" json:"user_id"`
+	ClassID          *uint      `gorm:"index" json:"class_id"`
+	SchoolID         uint       `gorm:"not null;index" json:"school_id"`
+	EnrollmentNumber string     `json:"enrollment_number"`
+	Status           string     `gorm:"default:PENDING" json:"status"` // PENDING, ENROLLED, DISCHARGED
+	AdmissionDate    *time.Time `json:"admission_date,omitempty"`
+	DischargeDate    *time.Time `json:"discharge_date,omitempty"`
+	DischargeReason  string     `json:"discharge_reason,omitempty"`
+	CreatedAt        time.Time  `json:"created_at"`
+	UpdatedAt        time.Time  `json:"updated_at"`
 
 	// Relations
-	User   User   `gorm:"foreignKey:UserID"`
-	Class  *Class `gorm:"foreignKey:ClassID"`
-	School School `gorm:"foreignKey:SchoolID"`
+	User   User   `gorm:"foreignKey:UserID" json:"User,omitempty"`
+	Class  *Class `gorm:"foreignKey:ClassID" json:"Class,omitempty"`
+	School School `gorm:"foreignKey:SchoolID" json:"-"`
 }
