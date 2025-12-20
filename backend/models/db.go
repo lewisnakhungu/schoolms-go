@@ -4,6 +4,7 @@ package models
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"gorm.io/driver/postgres"
@@ -11,12 +12,10 @@ import (
 	"gorm.io/gorm"
 )
 
-//declare a global variable to use go db anywhere in the app
-
+// Declare a global variable to use db anywhere in the app
 var DB *gorm.DB
 
-//db function
-
+// ConnectDB establishes database connection
 func ConnectDB() {
 	var db *gorm.DB
 	var err error
@@ -27,8 +26,13 @@ func ConnectDB() {
 
 	if databaseURL != "" {
 		// Railway PostgreSQL format
-		fmt.Println("Using DATABASE_URL for PostgreSQL connection")
+		log.Println("Connecting to PostgreSQL via DATABASE_URL...")
 		db, err = gorm.Open(postgres.Open(databaseURL), &gorm.Config{})
+		if err != nil {
+			log.Printf("PostgreSQL connection error: %v", err)
+			log.Fatal("Failed to connect to PostgreSQL database!")
+		}
+		log.Println("PostgreSQL connection successful!")
 	} else if dbHost != "" {
 		dsn := fmt.Sprintf(
 			"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
@@ -38,20 +42,26 @@ func ConnectDB() {
 			os.Getenv("DB_NAME"),
 			os.Getenv("DB_PORT"),
 		)
-		fmt.Println("Using DB_HOST for PostgreSQL connection")
+		log.Println("Connecting to PostgreSQL via DB_HOST...")
 		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		if err != nil {
+			log.Printf("PostgreSQL connection error: %v", err)
+			log.Fatal("Failed to connect to PostgreSQL database!")
+		}
+		log.Println("PostgreSQL connection successful!")
 	} else {
-		fmt.Println("No DATABASE_URL or DB_HOST found, using SQLite (schoolms.db)")
+		// Local development only - SQLite requires CGO
+		log.Println("No DATABASE_URL or DB_HOST found, using SQLite (schoolms.db)")
 		db, err = gorm.Open(sqlite.Open("schoolms.db"), &gorm.Config{})
+		if err != nil {
+			log.Printf("SQLite error: %v", err)
+			log.Fatal("Failed to connect to SQLite database!")
+		}
+		log.Println("SQLite connection successful!")
 	}
 
-	if err != nil {
-		fmt.Printf("Database connection error: %v\n", err)
-		panic("Failed to connect to database!")
-	}
-
-	// AutoMigrate will be called here or in a separate migration script
-	// For MVP, we'll keep it here but expand the list of models later
+	// AutoMigrate
+	log.Println("Running database migrations...")
 	db.AutoMigrate(
 		&User{}, &School{}, &Invite{},
 		&Class{}, &Student{},
@@ -63,6 +73,7 @@ func ConnectDB() {
 		&IntakeGroup{}, &Course{}, &Module{}, &StudentModuleEnrollment{}, &IndustrialAttachment{},
 		&AuditLog{},
 	)
+	log.Println("Database migrations complete!")
 
 	DB = db
 }

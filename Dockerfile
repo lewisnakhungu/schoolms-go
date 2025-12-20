@@ -3,8 +3,8 @@ FROM golang:1.23-alpine AS builder
 
 WORKDIR /app
 
-# Install build dependencies
-RUN apk add --no-cache git
+# Install build dependencies (including gcc for SQLite CGO)
+RUN apk add --no-cache git gcc musl-dev
 
 # Enable Go toolchain switching for Go 1.24+ dependencies
 ENV GOTOOLCHAIN=auto
@@ -16,8 +16,8 @@ RUN go mod download
 # Copy backend source code
 COPY backend/ .
 
-# Build the binary
-RUN CGO_ENABLED=0 GOOS=linux go build -o schoolms-binary .
+# Build the binary with CGO enabled for SQLite support
+RUN CGO_ENABLED=1 GOOS=linux go build -o schoolms-binary .
 
 # Final Stage
 FROM alpine:latest
